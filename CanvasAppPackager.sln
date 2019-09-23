@@ -3,7 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29209.62
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CanvasAppPackager", "CanvasAppPackager\CanvasAppPackager.csproj", "{140C2927-9D07-4084-AFFC-D08C077D0BCD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CanvasAppPackager", "CanvasAppPackager\CanvasAppPackager.csproj", "{140C2927-9D07-4084-AFFC-D08C077D0BCD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scripts", "Scripts", "{EFADF3A5-9D06-43B5-99E0-AF08C29EE6D6}"
+	ProjectSection(SolutionItems) = preProject
+		Scripts\ExtractNewestDownloadedPowerApp.linq = Scripts\ExtractNewestDownloadedPowerApp.linq
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
