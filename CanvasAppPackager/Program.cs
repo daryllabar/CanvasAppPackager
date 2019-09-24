@@ -8,21 +8,21 @@ namespace CanvasAppPackager
     {
         static void Main(string[] args)
         {
-            //var pack = new string[]
-            //{
-            //    "/a", "pack", 
-            //    "/z", @"C:\Temp\Extract\Pack.zip",
-            //    "/f", @"C:\Temp\Extract\PowerAppExport"
-            //};
-            //
-            //var unpack = new string[]
-            //{
-            //    "/a", "unpack", 
-            //    "/z", @"C:\Users\DarylLaBar\Downloads\PowerAppExport_20190920124459.zip",
-            //    "/f", @"C:\Temp\Extract\PowerAppExport"
-            //};
+            var pack = new string[]
+            {
+                "/a", "pack", 
+                "/z", @"C:\Temp\PowerFlappy\PowerFlappyByDaryl.zip",
+                "/f", @"C:\Temp\PowerFlappy\Extract"
+            };
+            
+            var unpack = new string[]
+            {
+                "/a", "unpack", 
+                "/z", @"C:\Temp\PowerFlappy\PowerFlappy.zip",
+                "/f", @"C:\Temp\PowerFlappy\Extract"
+            };
 
-            var options = Args.Args.Parse(args);
+            var options = Args.Args.Parse(pack);
             if (!string.IsNullOrWhiteSpace(options.LogPath))
             {
                 Logger.Error("Log Path not implemented!");

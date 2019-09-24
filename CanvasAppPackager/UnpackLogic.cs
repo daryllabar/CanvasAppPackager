@@ -102,14 +102,29 @@ namespace CanvasAppPackager
             var newJson = screen.Serialize();
             if (json != newJson)
             {
-                var jsonFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Extract.txt");
+                var jsonFile = Path.Combine(Path.GetDirectoryName(file), Path.GetFileName(file)) + ".original";
                 // ReSharper disable once StringLiteralTypo
-                var newJsonFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Reserialized.txt");
+                var newJsonFile = Path.Combine(Path.GetDirectoryName(jsonFile), Path.GetFileNameWithoutExtension(jsonFile)) + ".reserialized";
                 File.WriteAllText(jsonFile, json);
                 File.WriteAllText(newJsonFile, newJson);
+                var shortest = json.Length > newJson.Length
+                    ? newJson
+                    : json;
+
+                var firstDifferentChar = shortest.Length;
+                for (var i = 0; i < shortest.Length; i++)
+                {
+                    if (json[i] == newJson[i])
+                    {
+                        continue;
+                    }
+
+                    firstDifferentChar = i;
+                    break;
+                }
 
                 throw new
-                    Exception($"Unable to re-serialize json to match source!  To prevent potential app defects, extracting file {file} has stopped.  See '{jsonFile}' for extracted version vs output version '{newJsonFile}'.");
+                    Exception($"Unable to re-serialize json to match source!  Character at position {firstDifferentChar} is not correct.  To prevent potential app defects, extracting file {file} has stopped.{Environment.NewLine}See '{jsonFile}' for extracted version vs output version '{newJsonFile}'.");
             }
         }
 
