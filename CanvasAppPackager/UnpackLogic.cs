@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Text;
 using CanvasAppPackager.Poco;
 
@@ -17,6 +16,7 @@ namespace CanvasAppPackager
         {
             public const string PackageApps = "apps";
             public const string Apps = "Apps";
+            public const string Assets = "Assets";
             public const string Code = "Code";
             public const string Controls = "Controls";
             public const string Metadata= "MetadataFiles";
@@ -157,8 +157,8 @@ namespace CanvasAppPackager
 
             File.WriteAllText(Path.Combine(directory, Path.GetFileName(directory)) + ".json", 
                               screen.TopParent == control
-                                  ? screen.Serialize()
-                                  : control.Serialize());
+                                  ? screen.Serialize(Formatting.Indented)
+                                  : control.Serialize(Formatting.Indented));
         }
     }
 }
