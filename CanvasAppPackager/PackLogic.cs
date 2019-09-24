@@ -37,14 +37,10 @@ namespace CanvasAppPackager
         private static void PackApp(string appPath, string mainAppPath)
         {
             Logger.Log("Processing App at: " + appPath);
-            var sourcePath = Path.Combine(appPath, UnpackLogic.Paths.Metadata);
-            var metadataFiles = Directory.GetFiles(sourcePath);
-            Logger.Log("Parsing AppInfo");
-            var appInfo = AppInfo.Parse(File.ReadAllText(metadataFiles.Single(f => Path.GetExtension(f) == ".json")));
-            var destinationPath = Path.Combine(mainAppPath, UnpackLogic.Paths.MsPowerApps, "apps", appInfo.AppId);
             var zipPath = GetTemporaryDirectory();
             try
             {
+                Logger.Log("Copying app files for zip creation.");
                 CopyFilesToZipFolder(appPath, zipPath, "MsApp", UnpackLogic.Paths.Code, UnpackLogic.Paths.Metadata);
                 Logger.Log("Packaging Code files");
                 foreach (var codeDirectory in Directory.GetDirectories(Path.Combine(appPath, UnpackLogic.Paths.Code)))
@@ -59,8 +55,15 @@ namespace CanvasAppPackager
                     File.WriteAllText(Path.Combine(dir, screen.TopParent.ControlUniqueId) + ".json", screen.Serialize());
                 }
 
+                Logger.Log("Parsing AppInfo");
+                var sourcePath = Path.Combine(appPath, UnpackLogic.Paths.Metadata);
+                var metadataFiles = Directory.GetFiles(sourcePath); 
+                var appInfo = AppInfo.Parse(File.ReadAllText(metadataFiles.Single(f => Path.GetExtension(f) == ".json")));
+                var destinationPath = Path.Combine(mainAppPath, UnpackLogic.Paths.MsPowerApps, "apps", appInfo.AppId);
                 MoveMetadataFilesFromExtract(sourcePath, destinationPath, metadataFiles);
-                ZipFile.CreateFromDirectory(zipPath, Path.Combine(destinationPath, Path.GetFileName(appInfo.MsAppPath)));
+                var msAppZipPath = Path.Combine(destinationPath, Path.GetFileName(appInfo.MsAppPath));
+                Logger.Log($"Packing file {msAppZipPath}");
+                MsAppHelper.CreateFromDirectory(zipPath, msAppZipPath);
             }
             finally
             {
