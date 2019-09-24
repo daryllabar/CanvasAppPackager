@@ -185,6 +185,7 @@ namespace CanvasAppPackager
         private static void MoveMetadataFilesFromExtract(string sourcePath, string destinationPath, string[] metadataFiles)
         {
             Logger.Log($"Copying Metadata Files from \"{sourcePath}\" to \"{destinationPath}\".");
+            Directory.CreateDirectory(destinationPath);
             foreach (var file in metadataFiles)
             {
                 File.Copy(file, Path.Combine(destinationPath, Path.GetFileName(file)), true);
