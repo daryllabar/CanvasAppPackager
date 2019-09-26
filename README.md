@@ -2,9 +2,9 @@
 Tool used to Extract Canvas Apps, to be pushed into source control, and repackage it to be pushed to the cloud.  Basically a Power Apps version of the CRM SolutionPackager.  
 
 # BETA WARNING!
-This is extremely beta.  Currently the Pack functionality, although it creates a zip file that extracts to exactly the same files, fails when importing into Power Apps, so as such, is unusable.
+This is extremely beta.  Would highly recommend immediatly attempting to unpack and pack you app, upload back to PowerApps, and then download and unpack it again to see if anything has changed prior to depending on this for your ALM.  The Pack feature is much more scary than the Unpack.
 
-# Unpack
+# Command Line Args
 
  | Argument | Description |
  | --- | --- |
@@ -13,5 +13,8 @@ This is extremely beta.  Currently the Pack functionality, although it creates a
  | folder: \<FolderPath\> | Required. The path to a folder. When extracting, this folder is created and populated with component files. When packing, this folder must already exist and contain previously extracted component files. |
  | log: \<FilePath\> | Optional. A path and name to a log file. If the file already exists, new logging information is appended to the file. |
  
- Example: 
+Example Unpack: 
 > CanvasAppPackager.exe /a:unpack /z:"C:\Downloads\PowerFlappy\PowerFlappy.zip" /f:"C:\TFS\PowerFlappy\Extract"
+
+Example Pack:
+> CanvasAppPackager.exe /a:pack /z:"C:\Downloads\PowerFlappy\PowerFlappy.zip" /f:"C:\TFS\PowerFlappy\Extract"
