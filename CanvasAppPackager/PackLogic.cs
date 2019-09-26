@@ -40,21 +40,15 @@ namespace CanvasAppPackager
             var zipPath = GetTemporaryDirectory();
             try
             {
+                Logger.Log("Parsing Auto Values");
+                var extractor = AutoValueExtractor.Parse(Path.Combine(appPath, UnpackLogic.Paths.Code, UnpackLogic.Paths.AutoValues) + UnpackLogic.DataFileExt);
+
                 Logger.Log("Copying app files for zip creation.");
                 CopyFilesToZipFolder(appPath, zipPath, "MsApp", UnpackLogic.Paths.Code, UnpackLogic.Paths.Metadata);
+                
                 Logger.Log("Packaging Code files");
-                foreach (var codeDirectory in Directory.GetDirectories(Path.Combine(appPath, UnpackLogic.Paths.Code)))
-                {
-                    var screen = PackScreen(codeDirectory);
-                    var dir = Path.Combine(zipPath, UnpackLogic.Paths.Controls);
-                    if (!Directory.Exists(dir))
-                    {
-                        Directory.CreateDirectory(dir);
-                    }
-
-                    File.WriteAllText(Path.Combine(dir, screen.TopParent.ControlUniqueId) + ".json", screen.Serialize());
-                }
-
+                PackScreens(appPath, zipPath, extractor);
+                
                 Logger.Log("Parsing AppInfo");
                 var sourcePath = Path.Combine(appPath, UnpackLogic.Paths.Metadata);
                 var metadataFiles = Directory.GetFiles(sourcePath); 
@@ -62,12 +56,28 @@ namespace CanvasAppPackager
                 var destinationPath = Path.Combine(mainAppPath, UnpackLogic.Paths.MsPowerApps, "apps", appInfo.AppId);
                 MoveMetadataFilesFromExtract(sourcePath, destinationPath, metadataFiles);
                 var msAppZipPath = Path.Combine(destinationPath, Path.GetFileName(appInfo.MsAppPath));
+                
                 Logger.Log($"Packing file {msAppZipPath}");
                 MsAppHelper.CreateFromDirectory(zipPath, msAppZipPath);
             }
             finally
             {
                 Directory.Delete(zipPath, true);
+            }
+        }
+
+        private static void PackScreens(string appPath, string zipPath, AutoValueExtractor extractor)
+        {
+            foreach (var codeDirectory in Directory.GetDirectories(Path.Combine(appPath, UnpackLogic.Paths.Code)))
+            {
+                var screen = PackScreen(codeDirectory, extractor);
+                var dir = Path.Combine(zipPath, UnpackLogic.Paths.Controls);
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                File.WriteAllText(Path.Combine(dir, screen.TopParent.ControlUniqueId) + ".json", screen.Serialize());
             }
         }
 
@@ -78,19 +88,20 @@ namespace CanvasAppPackager
             return tempDirectory;
         }
 
-        private static CanvasAppScreen PackScreen(string codeDirectory)
+        private static CanvasAppScreen PackScreen(string codeDirectory, AutoValueExtractor extractor)
         {
             var jsonFile = Path.Combine(codeDirectory, Path.GetFileName(codeDirectory)) + ".json";
             Logger.Log("Parsing file " + Path.GetFileNameWithoutExtension(jsonFile));
             var json = File.ReadAllText(jsonFile);
             var screen = JsonConvert.DeserializeObject<CanvasAppScreen>(json);
             Logger.Log("Packaging file " + screen.TopParent.ControlUniqueId + " from " + Path.GetFileNameWithoutExtension(jsonFile));
-            PackChildControl(screen.TopParent, jsonFile);
+            PackChildControl(screen.TopParent, jsonFile, extractor);
             return screen;
         }
 
-        private static void PackChildControl(IControl control, string jsonFile)
+        private static void PackChildControl(IControl control, string jsonFile, AutoValueExtractor extractor)
         {
+            extractor.Inject(control, jsonFile);
             Logger.Log("Packing Control " + control.Name);
             var code = File.ReadAllText(Path.Combine(Path.GetDirectoryName(jsonFile), Path.GetFileNameWithoutExtension(jsonFile)) + UnpackLogic.CodeFileExt);
             var propertiesByName = new Dictionary<string, string>();
@@ -114,20 +125,21 @@ namespace CanvasAppPackager
                 if (propertiesByName.TryGetValue(property.Property, out var value))
                 {
                     property.InvariantScript = value;
+                    extractor.Inject(property, jsonFile);
                 }
             }
 
-            PackChildren(control, jsonFile);
+            PackChildren(control, jsonFile, extractor);
         }
 
-        private static void PackChildren(IControl control, string jsonFile)
+        private static void PackChildren(IControl control, string jsonFile, AutoValueExtractor extractor)
         {
             var childrenByName = new Dictionary<string, Child>();
             foreach (var childDirectory in Directory.GetDirectories(Path.GetDirectoryName(jsonFile)))
             {
                 var childJsonFile = Path.Combine(childDirectory, Path.GetFileName(childDirectory)) + ".json";
                 var child = JsonConvert.DeserializeObject<Child>(File.ReadAllText(childJsonFile));
-                PackChildControl(child, childJsonFile);
+                PackChildControl(child, childJsonFile, extractor);
                 childrenByName.Add(child.Name, child);
             }
 

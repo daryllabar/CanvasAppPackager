@@ -77,7 +77,7 @@ namespace CanvasAppPackager.Poco
         public string Name { get; set; }
         public Template Template { get; set; }
         public double Index { get; set; }
-        public int PublishOrderIndex { get; set; }
+        public int? PublishOrderIndex { get; set; }
         public string VariantName { get; set; }
         public string LayoutName { get; set; }
         public string MetaDataIDKey { get; set; }
@@ -117,7 +117,7 @@ namespace CanvasAppPackager.Poco
         public string Name { get; set; }
         public Template Template { get; set; }
         public double Index { get; set; }
-        public int PublishOrderIndex { get; set; }
+        public int? PublishOrderIndex { get; set; }
         public string VariantName { get; set; }
         public string LayoutName { get; set; }
         public string MetaDataIDKey { get; set; }
@@ -151,7 +151,9 @@ namespace CanvasAppPackager.Poco
     {
         string Name { get; set; }
         List<Rule> Rules { get; set; }
+        string ControlUniqueId { get; set; }
         List<Child> Children { get; set; }
         List<ChildOrder> ChildrenOrder { get; set; }
+        int? PublishOrderIndex { get; set; }
     }
 }

@@ -11,12 +11,13 @@ namespace CanvasAppPackager
     class UnpackLogic
     {   
         public const string CodeFileExt = ".js";
+        public const string DataFileExt = ".json";
         public const string EndOfRuleCode = "} // End of ";
         public struct Paths
         {
             public const string PackageApps = "apps";
             public const string Apps = "Apps";
-            public const string Assets = "Assets";
+            public const string AutoValues = "AutoValues";
             public const string Code = "Code";
             public const string Controls = "Controls";
             public const string Metadata= "MetadataFiles";
@@ -85,6 +86,7 @@ namespace CanvasAppPackager
         {
             var codeDirectory = Path.Combine(appDirectory, Paths.Code);
             var controlsDir = Path.Combine(appDirectory, Paths.Controls);
+            var autoValueExtractor = new AutoValueExtractor();
             foreach (var file in Directory.GetFiles(controlsDir))
             {
                 Logger.Log("Extracting file " + file);
@@ -92,8 +94,9 @@ namespace CanvasAppPackager
                 var screen = JsonConvert.DeserializeObject<CanvasAppScreen>(json);
                 VerifySerialization(screen, json, file);
                 var fileDirectory = Path.Combine(codeDirectory, screen.TopParent.Name);
-                WriteRules(screen, screen.TopParent, fileDirectory);
+                WriteRules(screen, screen.TopParent, fileDirectory, autoValueExtractor);
             }
+            File.WriteAllText(Path.Combine(codeDirectory, Paths.AutoValues) + DataFileExt, autoValueExtractor.Serialize());
             Directory.Delete(controlsDir, true);
         }
 
@@ -128,18 +131,22 @@ namespace CanvasAppPackager
             }
         }
 
-        private static void WriteRules(CanvasAppScreen screen, IControl control, string directory)
+        private static void WriteRules(CanvasAppScreen screen, IControl control, string directory, AutoValueExtractor autoValueExtractor)
         {
+            autoValueExtractor.PushControl(control.Name);
             Directory.CreateDirectory(directory);
             var sb = new StringBuilder();
+
             // Write out all Rules
             foreach (var rule in control.Rules)
             {
+                autoValueExtractor.Extract(rule);
                 sb.AppendLine(rule.Property + "(){"); 
                 sb.AppendLine("\t" + rule.InvariantScript.Replace(Environment.NewLine, Environment.NewLine + "\t"));
                 sb.AppendLine(EndOfRuleCode + rule.Property + Environment.NewLine);
                 rule.InvariantScript = null;
             }
+
             File.WriteAllText(Path.Join(directory, control.Name) + CodeFileExt, sb.ToString());
 
             // Create List of Children so the order can be maintained
@@ -148,17 +155,20 @@ namespace CanvasAppPackager
             // Write out all Children Rules
             foreach (var child in control.Children)
             {
-                WriteRules(screen, child, Path.Combine(directory, child.Name));
+                WriteRules(screen, child, Path.Combine(directory, child.Name), autoValueExtractor);
                 childrenOrder.Add(new ChildOrder{Name = child.Name, ChildrenOrder = child.ChildrenOrder});
             }
 
             control.Children = null;
             control.ChildrenOrder = childrenOrder.Count == 0 ? null : childrenOrder;
 
-            File.WriteAllText(Path.Combine(directory, Path.GetFileName(directory)) + ".json", 
+            autoValueExtractor.Extract(control);
+            File.WriteAllText(Path.Combine(directory, Path.GetFileName(directory)) + DataFileExt, 
                               screen.TopParent == control
                                   ? screen.Serialize(Formatting.Indented)
                                   : control.Serialize(Formatting.Indented));
+
+             autoValueExtractor.PopControl();
         }
     }
 }
