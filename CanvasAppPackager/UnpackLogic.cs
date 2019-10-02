@@ -18,8 +18,10 @@ namespace CanvasAppPackager
             public const string PackageApps = "apps";
             public const string Apps = "Apps";
             public const string AutoValues = "AutoValues";
+            public const string BackgroundImage = "BackgroundImage.png";
             public const string Code = "Code";
             public const string Controls = "Controls";
+            public const string Icons = "Icons";
             public const string Metadata= "MetadataFiles";
             public const string MsPowerApps = "Microsoft.PowerApps";
         }
@@ -61,25 +63,54 @@ namespace CanvasAppPackager
                 Logger.Log($"Extracting App {appInfo.DisplayName} - {appInfo.Description}");
                 var msAppFilePath = Path.Combine(appsPath, appInfo.MsAppPath);
                 Unpack(msAppFilePath, appOutputPath, options);
-                MoveMetadataFiles(appOutputPath, msAppFilePath);
+                MoveMetadataFiles(appInfo, appOutputPath, msAppFilePath);
             }
         }
 
-        private static void MoveMetadataFiles(string appOutputPath, string msAppFilePath)
+        private static void MoveMetadataFiles(AppInfo appInfo, string appOutputPath, string msAppFilePath)
         {
             var metadataFilesPath = Path.Combine(appOutputPath, Paths.Metadata);
             Directory.CreateDirectory(metadataFilesPath);
             Logger.Log($"Copying metadata files from {Path.GetDirectoryName(msAppFilePath)} to {metadataFilesPath}");
             File.Delete(msAppFilePath);
+            var fileMapping = GetMetadataFileMappings(appInfo);
             foreach (var file in Directory.GetFiles(Path.GetDirectoryName(msAppFilePath)))
             {
                 var destinationFile = Path.Combine(metadataFilesPath, Path.GetFileName(file));
+                var appInfoFileName = Path.GetRelativePath(Directory.GetParent(msAppFilePath)?.Parent?.FullName, file);
+                if (fileMapping.TryGetValue(appInfoFileName, out var mappedTo))
+                {
+                    destinationFile = Path.Combine(metadataFilesPath, mappedTo);
+                }
                 if (File.Exists(destinationFile))
                 {
                     File.Delete(destinationFile);
                 }
+
+                if (!Directory.Exists(Path.GetDirectoryName(destinationFile)))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(destinationFile));
+                }
                 File.Move(file, destinationFile);
             }
+        }
+
+        private static Dictionary<string, string> GetMetadataFileMappings(AppInfo appInfo)
+        {
+            var fileMapping = new Dictionary<string, string>();
+            fileMapping.Add(appInfo.BackgroundImage, Paths.BackgroundImage);
+            foreach (var icon in appInfo.Icons)
+            {
+                var key = icon.Key;
+                if (key.EndsWith("Uri"))
+                {
+                    key = key.Substring(0, key.Length - 3) + ".png";
+                }
+
+                fileMapping.Add(icon.Value, Path.Join(Paths.Icons, key));
+            }
+
+            return fileMapping;
         }
 
         private static void ExtractCanvasApp(string appDirectory)

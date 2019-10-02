@@ -51,10 +51,10 @@ namespace CanvasAppPackager
                 
                 Logger.Log("Parsing AppInfo");
                 var sourcePath = Path.Combine(appPath, UnpackLogic.Paths.Metadata);
-                var metadataFiles = Directory.GetFiles(sourcePath); 
+                var metadataFiles = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories); 
                 var appInfo = AppInfo.Parse(File.ReadAllText(metadataFiles.Single(f => Path.GetExtension(f) == ".json")));
                 var destinationPath = Path.Combine(mainAppPath, UnpackLogic.Paths.MsPowerApps, "apps", appInfo.AppId);
-                MoveMetadataFilesFromExtract(sourcePath, destinationPath, metadataFiles);
+                MoveMetadataFilesFromExtract(appInfo, sourcePath, destinationPath, metadataFiles);
                 var msAppZipPath = Path.Combine(destinationPath, Path.GetFileName(appInfo.MsAppPath));
                 
                 Logger.Log($"Packing file {msAppZipPath}");
@@ -197,13 +197,23 @@ namespace CanvasAppPackager
             }
         }
 
-        private static void MoveMetadataFilesFromExtract(string sourcePath, string destinationPath, string[] metadataFiles)
+        private static void MoveMetadataFilesFromExtract(AppInfo appInfo, string sourcePath, string destinationPath, string[] metadataFiles)
         {
             Logger.Log($"Copying Metadata Files from \"{sourcePath}\" to \"{destinationPath}\".");
             Directory.CreateDirectory(destinationPath);
             foreach (var file in metadataFiles)
             {
-                File.Copy(file, Path.Combine(destinationPath, Path.GetFileName(file)), true);
+                var fileName = Path.Combine(destinationPath, Path.GetFileName(file));
+                if (Path.GetFileName(file) == UnpackLogic.Paths.BackgroundImage)
+                {
+                    fileName = Path.Combine(destinationPath, Path.GetFileName(appInfo.BackgroundImage));
+                }
+                else if (Path.GetFileName(Path.GetDirectoryName(file)) == UnpackLogic.Paths.Icons
+                                                                   && appInfo.Icons.TryGetValue(Path.GetFileNameWithoutExtension(file) + "Uri", out var map))
+                {
+                    fileName = Path.Combine(Path.GetDirectoryName(destinationPath), map);
+                }
+                File.Copy(file, fileName, true);
             }
         }
 

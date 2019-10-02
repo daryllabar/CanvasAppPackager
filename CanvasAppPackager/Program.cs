@@ -22,7 +22,7 @@ namespace CanvasAppPackager
                 "/f", @"C:\Temp\PowerFlappy\Extract"
             };
 
-            var options = Args.Args.Parse(args);
+            var options = Args.Args.Parse(pack);
             if (!string.IsNullOrWhiteSpace(options.LogPath))
             {
                 Logger.Error("Log Path not implemented!");
