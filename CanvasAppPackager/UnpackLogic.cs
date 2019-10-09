@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
@@ -13,6 +14,7 @@ namespace CanvasAppPackager
         public const string CodeFileExt = ".js";
         public const string DataFileExt = ".json";
         public const string EndOfRuleCode = "} // End of ";
+
         public struct Paths
         {
             public const string PackageApps = "apps";
@@ -24,6 +26,9 @@ namespace CanvasAppPackager
             public const string Icons = "Icons";
             public const string Metadata= "MetadataFiles";
             public const string MsPowerApps = "Microsoft.PowerApps";
+            public const string Resources = "Resources";
+            public const string ResourcePublishFileName = "PublishInfo.json";
+            public const string LogoImage = "Logo";
         }
 
         public static void Unpack(string file, string outputDirectory, Args.Args options)
@@ -95,10 +100,23 @@ namespace CanvasAppPackager
             }
         }
 
+        private static void RenameAutoNamedFiles(string appDirectory)
+        {
+            var resourceFilesPath = Path.Combine(appDirectory, Paths.Resources);
+            var publishInfo = Path.Combine(resourceFilesPath, Paths.ResourcePublishFileName);
+            Logger.Log("Extracting file " + publishInfo);
+            var json = File.ReadAllText(publishInfo);
+            var info = JsonConvert.DeserializeObject<PublishInfo>(json);
+            var fromName = Path.Combine(resourceFilesPath, info.LogoFileName);
+            var toName = Path.Combine(resourceFilesPath, Paths.LogoImage + Path.GetExtension(info.LogoFileName));
+            Logger.Log($"Renaming auto named file '{fromName}' to '{toName}'.");
+            File.Delete(toName);
+            File.Move(fromName, toName);
+        }
+
         private static Dictionary<string, string> GetMetadataFileMappings(AppInfo appInfo)
         {
-            var fileMapping = new Dictionary<string, string>();
-            fileMapping.Add(appInfo.BackgroundImage, Paths.BackgroundImage);
+            var fileMapping = new Dictionary<string, string> {{appInfo.BackgroundImage, Paths.BackgroundImage}};
             foreach (var icon in appInfo.Icons)
             {
                 var key = icon.Key;
@@ -129,6 +147,8 @@ namespace CanvasAppPackager
             }
             File.WriteAllText(Path.Combine(codeDirectory, Paths.AutoValues) + DataFileExt, autoValueExtractor.Serialize());
             Directory.Delete(controlsDir, true);
+
+            RenameAutoNamedFiles(appDirectory);
         }
 
         private static void VerifySerialization(CanvasAppScreen screen, string json, string file)

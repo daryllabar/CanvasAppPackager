@@ -146,9 +146,8 @@ using NDesk.Options;
 namespace CanvasAppPackager.Args {
 
 	public class OptionValueCollection : IList, IList<string> {
-
-		List<string> values = new List<string> ();
-		OptionContext c;
+        readonly List<string> values = new List<string> ();
+        readonly OptionContext c;
 
 		internal OptionValueCollection (OptionContext c)
 		{
@@ -239,8 +238,8 @@ namespace CanvasAppPackager.Args {
 		private Option                option;
 		private string                name;
 		private int                   index;
-		private OptionSet             set;
-		private OptionValueCollection c;
+		private readonly OptionSet             set;
+		private readonly OptionValueCollection c;
 
 		public OptionContext (OptionSet set)
 		{
@@ -279,11 +278,12 @@ namespace CanvasAppPackager.Args {
 	}
 
 	public abstract class Option {
-		string prototype, description;
-		string[] names;
-		OptionValueType type;
-		int count;
-		string[] separators;
+        readonly string prototype;
+        readonly string description;
+        readonly string[] names;
+        readonly OptionValueType type;
+        readonly int count;
+		string[] _separators;
 
 		protected Option (string prototype, string description)
 			: this (prototype, description, 1)
@@ -334,15 +334,15 @@ namespace CanvasAppPackager.Args {
 
 		public string[] GetValueSeparators ()
 		{
-			if (separators == null)
+			if (_separators == null)
 				return new string [0];
-			return (string[]) separators.Clone ();
+			return (string[]) _separators.Clone ();
 		}
 
 		protected static T Parse<T> (string value, OptionContext c)
 		{
 			TypeConverter conv = TypeDescriptor.GetConverter (typeof (T));
-			T t = default (T);
+			T t = default;
 			try {
 				if (value != null)
 					t = (T) conv.ConvertFromString (value);
@@ -358,7 +358,7 @@ namespace CanvasAppPackager.Args {
 		}
 
 		internal string[] Names           {get {return names;}}
-		internal string[] ValueSeparators {get {return separators;}}
+		internal string[] ValueSeparators {get {return _separators;}}
 
 		static readonly char[] NameTerminator = new char[]{'=', ':'};
 
@@ -393,11 +393,11 @@ namespace CanvasAppPackager.Args {
 						"prototype");
 			if (count > 1) {
 				if (seps.Count == 0)
-					this.separators = new string[]{":", "="};
+					this._separators = new string[]{":", "="};
 				else if (seps.Count == 1 && seps [0].Length == 0)
-					this.separators = null;
+					this._separators = null;
 				else
-					this.separators = seps.ToArray ();
+					this._separators = seps.ToArray ();
 			}
 
 			return type == '=' ? OptionValueType.Required : OptionValueType.Optional;
@@ -453,7 +453,7 @@ namespace CanvasAppPackager.Args {
 
 	[Serializable]
 	public class OptionException : Exception {
-		private string option;
+		private readonly string option;
 
 		public OptionException ()
 		{
@@ -503,7 +503,7 @@ namespace CanvasAppPackager.Args {
 			this.localizer = localizer;
 		}
 
-		Converter<string, string> localizer;
+        readonly Converter<string, string> localizer;
 
 		public Converter<string, string> MessageLocalizer {
 			get {return localizer;}
@@ -582,14 +582,12 @@ namespace CanvasAppPackager.Args {
 		}
 
 		sealed class ActionOption : Option {
-			Action<OptionValueCollection> action;
+            readonly Action<OptionValueCollection> action;
 
 			public ActionOption (string prototype, string description, int count, Action<OptionValueCollection> action)
 				: base (prototype, description, count)
 			{
-				if (action == null)
-					throw new ArgumentNullException ("action");
-				this.action = action;
+                this.action = action ?? throw new ArgumentNullException ("action");
 			}
 
 			protected override void OnParseComplete (OptionContext c)
@@ -629,14 +627,12 @@ namespace CanvasAppPackager.Args {
 		}
 
 		sealed class ActionOption<T> : Option {
-			Action<T> action;
+            readonly Action<T> action;
 
 			public ActionOption (string prototype, string description, Action<T> action)
 				: base (prototype, description, 1)
 			{
-				if (action == null)
-					throw new ArgumentNullException ("action");
-				this.action = action;
+                this.action = action ?? throw new ArgumentNullException ("action");
 			}
 
 			protected override void OnParseComplete (OptionContext c)
@@ -646,14 +642,12 @@ namespace CanvasAppPackager.Args {
 		}
 
 		sealed class ActionOption<TKey, TValue> : Option {
-			OptionAction<TKey, TValue> action;
+            readonly OptionAction<TKey, TValue> action;
 
 			public ActionOption (string prototype, string description, OptionAction<TKey, TValue> action)
 				: base (prototype, description, 2)
 			{
-				if (action == null)
-					throw new ArgumentNullException ("action");
-				this.action = action;
+                this.action = action ?? throw new ArgumentNullException ("action");
 			}
 
 			protected override void OnParseComplete (OptionContext c)
@@ -785,8 +779,7 @@ namespace CanvasAppPackager.Args {
 				return true;
 			}
 
-			string f, n, s, v;
-			if (!GetOptionParts (argument, out f, out n, out s, out v))
+            if (!GetOptionParts (argument, out var f, out var n, out var s, out var v))
 				return false;
 
 			Option p;

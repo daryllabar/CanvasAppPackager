@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -55,6 +56,10 @@ namespace CanvasAppPackager
                 var appInfo = AppInfo.Parse(File.ReadAllText(metadataFiles.Single(f => Path.GetExtension(f) == ".json")));
                 var destinationPath = Path.Combine(mainAppPath, UnpackLogic.Paths.MsPowerApps, "apps", appInfo.AppId);
                 MoveMetadataFilesFromExtract(appInfo, sourcePath, destinationPath, metadataFiles);
+
+                Logger.Log("Parsing Resource\\PublisherInfo");
+                RestoreAutoNamedFiles(zipPath);
+
                 var msAppZipPath = Path.Combine(destinationPath, Path.GetFileName(appInfo.MsAppPath));
                 
                 Logger.Log($"Packing file {msAppZipPath}");
@@ -215,6 +220,19 @@ namespace CanvasAppPackager
                 }
                 File.Copy(file, fileName, true);
             }
+        }
+
+        private static void RestoreAutoNamedFiles(string appDirectory)
+        {
+            var resourceFilesPath = Path.Combine(appDirectory, UnpackLogic.Paths.Resources);
+            var publishInfo = Path.Combine(resourceFilesPath, UnpackLogic.Paths.ResourcePublishFileName);
+            Logger.Log("Extracting file " + publishInfo);
+            var json = File.ReadAllText(publishInfo);
+            var info = JsonConvert.DeserializeObject<PublishInfo>(json);
+            var fromName = Path.Combine(resourceFilesPath, UnpackLogic.Paths.LogoImage + Path.GetExtension(info.LogoFileName));
+            var toName = Path.Combine(appDirectory, UnpackLogic.Paths.Resources, info.LogoFileName); 
+            Logger.Log($"Restoring auto named file '{fromName}' to '{toName}'.");
+            File.Move(fromName, toName);
         }
 
         private static void CopyDirectory(string sourceDirName, string destDirName)
