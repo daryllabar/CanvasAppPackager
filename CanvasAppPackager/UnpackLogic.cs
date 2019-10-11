@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using CanvasAppPackager.Poco;
 
@@ -40,14 +41,14 @@ namespace CanvasAppPackager
             }
 
             Logger.Log("Extracting files from " + file);
-            ZipFile.ExtractToDirectory(file, outputDirectory, true);
-            
             if (Path.GetExtension(file).ToLower() == ".zip")
             {
+                ZipFile.ExtractToDirectory(file, outputDirectory, true);
                 ExtractApps(outputDirectory, options);
             }
             else
             {
+                MsAppHelper.ExtractToDirectory(file, outputDirectory, true);
                 ExtractCanvasApp(outputDirectory);
             }
         }
