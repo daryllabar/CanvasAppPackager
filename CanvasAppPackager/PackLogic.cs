@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Dynamic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -82,7 +81,7 @@ namespace CanvasAppPackager
                     Directory.CreateDirectory(dir);
                 }
 
-                File.WriteAllText(Path.Combine(dir, screen.TopParent.ControlUniqueId) + ".json", screen.Serialize());
+                File.WriteAllText(Path.Combine(dir, screen.TopParent.ControlUniqueId) + ".json", screen.Serialize(Formatting.Indented));
             }
         }
 

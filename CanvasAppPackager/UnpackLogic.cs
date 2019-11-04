@@ -1,10 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Text;
 using CanvasAppPackager.Poco;
 
@@ -154,7 +152,10 @@ namespace CanvasAppPackager
 
         private static void VerifySerialization(CanvasAppScreen screen, string json, string file)
         {
-            var newJson = screen.Serialize();
+            var isJsonFormatted = json.Length > 2 && json[1] == '\r' && json[2] == '\n';
+            var newJson = screen.Serialize(isJsonFormatted
+                                               ? Formatting.Indented
+                                               : Formatting.None);
             if (json != newJson)
             {
                 var jsonFile = Path.Combine(Path.GetDirectoryName(file), Path.GetFileName(file)) + ".original";
