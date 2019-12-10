@@ -28,6 +28,20 @@ namespace CanvasAppPackager.Poco
         public OverridableProperties OverridableProperties { get; set; }
     }
 
+    public class DataEntity
+    {
+        public string EntityInfoIdentity { get; set; }
+        public string EntityInfoName { get; set; }
+        public bool EntityInfoIsTable { get; set; }
+        public string EntityInfoParentDSName { get; set; }
+        public string EntityInfoRelatedEntityPath { get; set; }
+    }
+    public class OptionSet
+    {
+        public bool OptionSetIsValue { get; set; }
+        public string OptionSetName { get; set; }
+    }
+
     public class TypeTemplate
     {
         public string TemplateName { get; set; }
@@ -61,6 +75,8 @@ namespace CanvasAppPackager.Poco
         public string Name { get; set; }
         public string Kind { get; set; }
         public string EnumString { get; set; }
+        public DataEntity DataEntity { get; set; }
+        public OptionSet OptionSet { get; set; }
         public TypeTemplate Template { get; set; }
         public List<ControlType> Type { get; set; }
         public List<string> ProjectionInfoDataSources { get; set; }
