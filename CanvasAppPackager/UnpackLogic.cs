@@ -166,10 +166,23 @@ namespace CanvasAppPackager
                 var shortest = json.Length > newJson.Length
                     ? newJson
                     : json;
+                var errorScope = Environment.NewLine + Environment.NewLine;
+                var lineNumber = 0;
+                var linePosition = 0;
 
                 var firstDifferentChar = shortest.Length;
                 for (var i = 0; i < shortest.Length; i++)
                 {
+                    if(json[i] == '\n')
+                    {
+                        lineNumber++;
+                        linePosition = 0;
+                    }
+                    else
+                    {
+                        linePosition++;
+                    }
+
                     if (json[i] == newJson[i])
                     {
                         continue;
@@ -180,7 +193,9 @@ namespace CanvasAppPackager
                 }
 
                 throw new
-                    Exception($"Unable to re-serialize json to match source!  Character at position {firstDifferentChar} is not correct.  To prevent potential app defects, extracting file {file} has stopped.{Environment.NewLine}See '{jsonFile}' for extracted version vs output version '{newJsonFile}'.");
+                    Exception($"Unable to re-serialize json to match source!  Character at position: {firstDifferentChar} on line: {lineNumber} at {linePosition} is not correct.  To prevent potential app defects, extracting file {file} has stopped.{Environment.NewLine}See '{jsonFile}' for extracted version vs output version '{newJsonFile}'.{(string.IsNullOrWhiteSpace(errorScope) ? string.Empty : errorScope)}");
+
+                     
             }
         }
 

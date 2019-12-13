@@ -19,12 +19,16 @@ namespace CanvasAppPackager.Poco
     {
         public string Id { get; set; }
         public string Version { get; set; }
+        public string LastModifiedTimestamp { get; set; }
         public string Name { get; set; }
         public bool? FirstParty { get; set; }
         public bool IsCustomGroupControlTemplate { get; set; }
         public string CustomGroupControlTemplateName { get; set; }
         public string CustomControlDefinitionJson { get; set; }
         public string DynamicControlDefinitionJson { get; set; }
+        public bool IsComponentDefinition { get; set; }
+        public List<CustomProperty> CustomProperties { get; set; }
+        public Component ComponentDefinitionInfo { get; set; }
         public OverridableProperties OverridableProperties { get; set; }
     }
 
@@ -92,6 +96,7 @@ namespace CanvasAppPackager.Poco
     {
         public string Type { get; set; }
         public string Name { get; set; }
+        public string LastModifiedTimestamp { get; set; }
         public Template Template { get; set; }
         public double Index { get; set; }
         public int? PublishOrderIndex { get; set; }
@@ -111,6 +116,7 @@ namespace CanvasAppPackager.Poco
         public bool IsLocked { get; set; }
         public string ControlUniqueId { get; set; }
         public ControlThisItemType ControlThisItemType { get; set; }
+        public Metadata Metadata { get; set; }
         public List<Child> Children { get; set; }
         public List<ChildOrder> ChildrenOrder { get; set; }
 
@@ -126,6 +132,37 @@ namespace CanvasAppPackager.Poco
     {
         public List<ChildOrder> ChildrenOrder { get; set; }
         public string Name { get; set; }
+    }
+
+    public class Component
+    {
+        public string Name { get; set; }
+        public string LastModifiedTimestamp { get; set; }
+        public List<Rule> Rules { get; set; }
+        public List<ControlPropertyState> ControlPropertyState { get; set; }
+        public List<Child> Children { get; set; }
+
+        public Component()
+        {
+            Children = new List<Child>();
+        }
+    }
+
+    public class CustomProperty
+    {
+        public string Name { get; set; }
+        public int Category { get; set; }
+        public string Type { get; set; }
+        public string PropertyDataTypeKey { get; set; }
+        public bool Hidden { get; set; }
+        public bool? IsResettable { get; set; }
+        public string DisplayName { get; set; }
+        public string Tooltip { get; set; }
+    }
+
+    public class Metadata
+    {
+        public string Description { get; set; }
     }
 
     public class TopParent : IControl
