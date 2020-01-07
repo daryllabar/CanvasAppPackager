@@ -236,7 +236,7 @@ namespace CanvasAppPackager
                                   ? screen.Serialize(Formatting.Indented)
                                   : control.Serialize(Formatting.Indented));
 
-             autoValueExtractor.PopControl();
+            autoValueExtractor.PopControl();
         }
     }
 }

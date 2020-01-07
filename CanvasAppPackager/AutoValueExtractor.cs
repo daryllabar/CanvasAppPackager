@@ -77,6 +77,13 @@ namespace CanvasAppPackager
             control.ControlUniqueId = null;
             value.PublishOrderIndex = control.PublishOrderIndex.GetValueOrDefault();
             control.PublishOrderIndex = null;
+
+            if (control.Template.Id == @"http://microsoft.com/appmagic/Component")
+            {
+                // Only remove version for Templates.
+                value.TemplateVersion = control.Template.Version;
+                control.Template.Version = null;
+            }
         }
 
         public string Serialize()
@@ -122,6 +129,11 @@ namespace CanvasAppPackager
 
             control.ControlUniqueId = value.ControlUniqueId;
             control.PublishOrderIndex = value.PublishOrderIndex;
+            if (control.Template.Id == @"http://microsoft.com/appmagic/Component")
+            {
+                // Only remove version for Templates.
+                control.Template.Version = value.TemplateVersion;
+            }
         }
 
 

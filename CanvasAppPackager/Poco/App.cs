@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CanvasAppPackager.Poco
@@ -163,6 +164,9 @@ namespace CanvasAppPackager.Poco
     public class Metadata
     {
         public string Description { get; set; }
+
+        [JsonProperty("Allow customization")]
+        public bool AllowCustomizations { get; set; }
     }
 
     public class TopParent : IControl
@@ -204,6 +208,7 @@ namespace CanvasAppPackager.Poco
     public interface IControl
     {
         string Name { get; set; }
+        public Template Template { get; set; }
         List<Rule> Rules { get; set; }
         string ControlUniqueId { get; set; }
         List<Child> Children { get; set; }
