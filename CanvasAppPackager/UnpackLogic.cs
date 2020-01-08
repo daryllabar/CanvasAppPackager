@@ -47,7 +47,7 @@ namespace CanvasAppPackager
             else
             {
                 MsAppHelper.ExtractToDirectory(file, outputDirectory, true);
-                ExtractCanvasApp(outputDirectory);
+                ExtractCanvasApp(outputDirectory, options);
             }
         }
 
@@ -130,7 +130,7 @@ namespace CanvasAppPackager
             return fileMapping;
         }
 
-        private static void ExtractCanvasApp(string appDirectory)
+        private static void ExtractCanvasApp(string appDirectory, Args.Args options)
         {
             var codeDirectory = Path.Combine(appDirectory, Paths.Code);
             var controlsDir = Path.Combine(appDirectory, Paths.Controls);
@@ -139,6 +139,10 @@ namespace CanvasAppPackager
             {
                 Logger.Log("Extracting file " + file);
                 var json = File.ReadAllText(file);
+                if (!string.IsNullOrWhiteSpace(options.RenameCopiedControlOldPostfix))
+                {
+                    json = RenameControls(json, options);
+                }
                 var screen = JsonConvert.DeserializeObject<CanvasAppScreen>(json);
                 VerifySerialization(screen, json, file);
                 var fileDirectory = Path.Combine(codeDirectory, screen.TopParent.Name);
@@ -148,6 +152,12 @@ namespace CanvasAppPackager
             Directory.Delete(controlsDir, true);
 
             RenameAutoNamedFiles(appDirectory);
+        }
+
+        private static string RenameControls(string app, Args.Args options)
+        {
+            Logger.Log($"Renaming Controls from \"{options.RenameCopiedControlOldPostfix}\" to \"{options.RenameCopiedControlNewPostfix}\".");
+            return app.Replace(options.RenameCopiedControlOldPostfix, options.RenameCopiedControlNewPostfix);
         }
 
         private static void VerifySerialization(CanvasAppScreen screen, string json, string file)
