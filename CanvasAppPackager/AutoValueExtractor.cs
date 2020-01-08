@@ -12,8 +12,10 @@ namespace CanvasAppPackager
         private Dictionary<string, AutoValue> AutoValues { get; set; }
         private HashSet<string> JsRulesHandled { get; } = new HashSet<string>(new []{ "ZIndex" });
         private Stack<string> ControlNames { get; } = new Stack<string>();
+        private Stack<string> ComponentControlNames { get; } = new Stack<string>();
         private string RootCodePath { get; set; }
         private string Name { get; set; }
+        private string ComponentName { get; set; }
 
         public AutoValueExtractor()
         {
@@ -31,6 +33,19 @@ namespace CanvasAppPackager
             ControlNames.Pop();
             Name = string.Join(Environment.NewLine, ControlNames.ToArray().Reverse());
         }
+
+        public void PushComponentControl(string name)
+        {
+            ComponentControlNames.Push(name);
+            ComponentName = string.Join(Environment.NewLine, ComponentControlNames.ToArray().Reverse());
+        }
+
+        public void PopComponentControl()
+        {
+            ComponentControlNames.Pop();
+            ComponentName = string.Join(Environment.NewLine, ComponentControlNames.ToArray().Reverse());
+        }
+
 
         public bool Extract(Rule rule)
         {
@@ -64,13 +79,14 @@ namespace CanvasAppPackager
 
         public void Extract(IControl control)
         {
-            if (!AutoValues.TryGetValue(Name, out var value))
+            var name = string.IsNullOrWhiteSpace(ComponentName) ? Name : Name + "|" + ComponentName;
+            if (!AutoValues.TryGetValue(name, out var value))
             {
                 value = new AutoValue
                 {
-                    Name = Name,
+                    Name = name,
                 };
-                AutoValues.Add(Name, value);
+                AutoValues.Add(name, value);
             }
 
             value.ControlUniqueId = control.ControlUniqueId;
@@ -121,7 +137,8 @@ namespace CanvasAppPackager
 
         public void Inject(IControl control, string controlPath)
         {
-            var name = string.Join(Environment.NewLine, Path.GetRelativePath(RootCodePath, Path.GetDirectoryName(controlPath)).Split(new[] {Path.DirectorySeparatorChar}));
+            var name = string.Join(Environment.NewLine, Path.GetRelativePath(RootCodePath, Path.GetDirectoryName(controlPath)).Split(new[] { Path.DirectorySeparatorChar }));
+            name = string.IsNullOrWhiteSpace(ComponentName) ? name : name + "|" + ComponentName;
             if (!AutoValues.TryGetValue(name, out var value))
             {
                 throw  new KeyNotFoundException($"Unable to find auto value for rule {control.Name} at {controlPath}");
@@ -145,6 +162,28 @@ namespace CanvasAppPackager
                                         .Values.ToDictionary(k => k.Name),
                 RootCodePath = Path.GetDirectoryName(autoValuesPath)
             };
+        }
+
+        public void ExtractComponentChildren(List<Child> children)
+        {
+            foreach (var child in children)
+            {
+                PushComponentControl(child.Name);
+                Extract(child);
+                ExtractComponentChildren(child.Children);
+                PopComponentControl();
+            }
+        }
+
+        public void InjectComponentChildren(List<Child> children, string jsonFile)
+        {
+            foreach (var child in children)
+            {
+                PushComponentControl(child.Name);
+                Inject(child, jsonFile);
+                ExtractComponentChildren(child.Children);
+                PopComponentControl();
+            }
         }
     }
 }

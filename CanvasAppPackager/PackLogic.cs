@@ -106,6 +106,10 @@ namespace CanvasAppPackager
         private static void PackChildControl(IControl control, string jsonFile, AutoValueExtractor extractor)
         {
             extractor.Inject(control, jsonFile);
+            if (control.Template?.ComponentDefinitionInfo?.Children != null)
+            {
+                extractor.InjectComponentChildren(control.Template.ComponentDefinitionInfo.Children, jsonFile);
+            }
             Logger.Log("Packing Control " + control.Name);
             var code = File.ReadAllText(Path.Combine(Path.GetDirectoryName(jsonFile), Path.GetFileNameWithoutExtension(jsonFile)) + UnpackLogic.CodeFileExt);
             var propertiesByName = new Dictionary<string, string>();

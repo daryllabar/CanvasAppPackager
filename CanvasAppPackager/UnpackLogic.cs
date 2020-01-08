@@ -227,6 +227,11 @@ namespace CanvasAppPackager
                 childrenOrder.Add(new ChildOrder{Name = child.Name, ChildrenOrder = child.ChildrenOrder});
             }
 
+            if (control.Template?.ComponentDefinitionInfo?.Children != null)
+            {
+                autoValueExtractor.ExtractComponentChildren(control.Template.ComponentDefinitionInfo.Children);
+            }
+
             control.Children = null;
             control.ChildrenOrder = childrenOrder.Count == 0 ? null : childrenOrder;
 
