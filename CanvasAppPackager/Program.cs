@@ -17,11 +17,11 @@ namespace CanvasAppPackager
             
             var unpack = new string[]
             {
-                "/a", "unpack", 
+                "/a", "unpack",
                 "/z", @"C:\Temp\PowerFlappy\PowerFlappy.zip",
                 "/f", @"C:\Temp\PowerFlappy\Extract"
+                //,"/r", "Si_3|Wm"
             };
-
             var options = Args.Args.Parse(args);
             if (!string.IsNullOrWhiteSpace(options.LogPath))
             {

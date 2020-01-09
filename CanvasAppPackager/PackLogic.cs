@@ -98,7 +98,7 @@ namespace CanvasAppPackager
             Logger.Log("Parsing file " + Path.GetFileNameWithoutExtension(jsonFile));
             var json = File.ReadAllText(jsonFile);
             var screen = JsonConvert.DeserializeObject<CanvasAppScreen>(json);
-            Logger.Log("Packaging file " + screen.TopParent.ControlUniqueId + " from " + Path.GetFileNameWithoutExtension(jsonFile));
+            Logger.Log("Packaging file " + screen.TopParent.Name + " from " + Path.GetFileNameWithoutExtension(jsonFile));
             PackChildControl(screen.TopParent, jsonFile, extractor);
             return screen;
         }
