@@ -18,6 +18,8 @@ namespace CanvasAppPackager.Poco
         public string ZIndex { get; set; }
         public int PublishOrderIndex { get; set; }
         public string ControlUniqueId { get; set; }
+        public string TemplateComponentDefinitionLastModified { get; set; }
+        public string TemplateLastModified { get; set; }
         public string TemplateVersion { get; set; }
     }
 }

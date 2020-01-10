@@ -146,7 +146,7 @@ namespace CanvasAppPackager
                 var screen = JsonConvert.DeserializeObject<CanvasAppScreen>(json);
                 VerifySerialization(screen, json, file);
                 var fileDirectory = Path.Combine(codeDirectory, screen.TopParent.Name);
-                WriteRules(screen, screen.TopParent, fileDirectory, autoValueExtractor);
+                ParseControl(screen, screen.TopParent, fileDirectory, autoValueExtractor);
             }
             File.WriteAllText(Path.Combine(codeDirectory, Paths.AutoValues) + DataFileExt, autoValueExtractor.Serialize());
             Directory.Delete(controlsDir, true);
@@ -209,7 +209,7 @@ namespace CanvasAppPackager
             }
         }
 
-        private static void WriteRules(CanvasAppScreen screen, IControl control, string directory, AutoValueExtractor autoValueExtractor)
+        private static void ParseControl(CanvasAppScreen screen, IControl control, string directory, AutoValueExtractor autoValueExtractor)
         {
             autoValueExtractor.PushControl(control.Name);
             Directory.CreateDirectory(directory);
@@ -233,7 +233,7 @@ namespace CanvasAppPackager
             // Write out all Children Rules
             foreach (var child in control.Children)
             {
-                WriteRules(screen, child, Path.Combine(directory, child.Name), autoValueExtractor);
+                ParseControl(screen, child, Path.Combine(directory, child.Name), autoValueExtractor);
                 childrenOrder.Add(new ChildOrder{Name = child.Name, ChildrenOrder = child.ChildrenOrder});
             }
 

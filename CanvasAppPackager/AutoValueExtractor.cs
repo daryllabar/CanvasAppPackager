@@ -97,6 +97,10 @@ namespace CanvasAppPackager
             if (control.Template.Id == @"http://microsoft.com/appmagic/Component")
             {
                 // Only remove version for Templates.
+                value.TemplateLastModified = control.Template.LastModifiedTimestamp;
+                control.Template.LastModifiedTimestamp = null;
+                value.TemplateComponentDefinitionLastModified = control.Template.ComponentDefinitionInfo.LastModifiedTimestamp;
+                control.Template.ComponentDefinitionInfo.LastModifiedTimestamp = null;
                 value.TemplateVersion = control.Template.Version;
                 control.Template.Version = null;
             }
@@ -150,6 +154,8 @@ namespace CanvasAppPackager
             {
                 // Only remove version for Templates.
                 control.Template.Version = value.TemplateVersion;
+                control.Template.LastModifiedTimestamp = value.TemplateLastModified;
+                control.Template.ComponentDefinitionInfo.LastModifiedTimestamp = value.TemplateComponentDefinitionLastModified;
             }
         }
 
