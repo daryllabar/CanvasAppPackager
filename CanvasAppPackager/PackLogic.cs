@@ -233,9 +233,22 @@ namespace CanvasAppPackager
             var json = File.ReadAllText(publishInfo);
             var info = JsonConvert.DeserializeObject<PublishInfo>(json);
             var fromName = Path.Combine(resourceFilesPath, UnpackLogic.Paths.LogoImage + Path.GetExtension(info.LogoFileName));
-            var toName = Path.Combine(appDirectory, UnpackLogic.Paths.Resources, info.LogoFileName); 
+            var toName = Path.Combine(appDirectory, UnpackLogic.Paths.Resources, info.LogoFileName);
             Logger.Log($"Restoring auto named file '{fromName}' to '{toName}'.");
             File.Move(fromName, toName);
+
+            // Rename Component Files
+            var componentsPath = Path.Combine(appDirectory, UnpackLogic.Paths.Components);
+            foreach (var file in Directory.GetFiles(componentsPath))
+            {
+                Logger.Log("Extracting file " + file);
+                json = File.ReadAllText(file);
+                var component = JsonConvert.DeserializeObject<CanvasAppScreen>(json);
+                toName = Path.Combine(componentsPath, component.TopParent.ControlUniqueId + Path.GetExtension(file));
+                Logger.Log($"Renaming component file '{file}' to '{toName}'.");
+                File.Delete(toName);
+                File.Move(file, toName);
+            }
         }
 
         private static void CopyDirectory(string sourceDirName, string destDirName)

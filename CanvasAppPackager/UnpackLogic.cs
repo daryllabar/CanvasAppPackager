@@ -21,6 +21,7 @@ namespace CanvasAppPackager
             public const string AutoValues = "AutoValues";
             public const string BackgroundImage = "BackgroundImage.png";
             public const string Code = "Code";
+            public const string Components = "Components";
             public const string Controls = "Controls";
             public const string Icons = "Icons";
             public const string Metadata= "MetadataFiles";
@@ -38,7 +39,7 @@ namespace CanvasAppPackager
                 Directory.Delete(outputDirectory, true);
             }
 
-            Logger.Log("Extracting files from " + file);
+            Logger.Log("Extracting files from " + file + " to " + outputDirectory );
             if (Path.GetExtension(file).ToLower() == ".zip")
             {
                 ZipFile.ExtractToDirectory(file, outputDirectory, true);
@@ -47,7 +48,10 @@ namespace CanvasAppPackager
             else
             {
                 MsAppHelper.ExtractToDirectory(file, outputDirectory, true);
-                ExtractCanvasApp(outputDirectory, options);
+                if (!options.OnlyExtract)
+                {
+                    ExtractCanvasApp(outputDirectory, options);
+                }
             }
         }
 
@@ -111,6 +115,19 @@ namespace CanvasAppPackager
             Logger.Log($"Renaming auto named file '{fromName}' to '{toName}'.");
             File.Delete(toName);
             File.Move(fromName, toName);
+
+            //Rename Component Files
+            var componentsPath = Path.Combine(appDirectory, Paths.Components);
+            foreach (var file in Directory.GetFiles(componentsPath))
+            {
+                Logger.Log("Extracting file " + file);
+                json = File.ReadAllText(file);
+                var component = JsonConvert.DeserializeObject<CanvasAppScreen>(json);
+                toName = Path.Combine(componentsPath, component.TopParent.Name + Path.GetExtension(file));
+                Logger.Log($"Renaming component file '{file}' to '{toName}'.");
+                File.Delete(toName);
+                File.Move(file, toName);
+            }
         }
 
         private static Dictionary<string, string> GetMetadataFileMappings(AppInfo appInfo)

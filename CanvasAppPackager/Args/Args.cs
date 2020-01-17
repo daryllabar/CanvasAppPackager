@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CanvasAppPackager.Args
@@ -65,6 +66,7 @@ namespace CanvasAppPackager.Args
                     {"z=|ZipFile", "Required. The path and name of an application package .zip file. When extracting, the file must exist and will be read from, or must be 'Latest' to use the latest downloaded file. When packing, the file is replaced.", v => PackageZip = v?.Trim() },
                     {"f=|folder", "Required. The path to a folder. When extracting, this folder is created and populated with component files. When packing, this folder must already exist and contain previously extracted component files.", v => UnpackPath = v?.Trim()},
                     {"l:|log", "Optional. A path and name to a log file. If the file already exists, new logging information is appended to the file.", v => LogPath = v?.Trim()},
+                    {"o:|OnlyExtract", "Optional.  Only unpacks the MsApp file, does not parse it.", v => OnlyExtract = bool.Parse(v.Trim()) },
                     {"r=|RenameCopiedScreenControls", "Optional. Only valid on Unpack.  Should contain a piped delimited string of {OldScreenPostfixValue}|{NewScreenPostfixValue}.  So EditScreen|DisplayScreen to rename a control MyLabelEditScreen_1 to MyLabelDisplayScreen", v =>
                     {
                         RenameCopiedControlOldPostfix = v?.Split('|').FirstOrDefault()?.Trim();
@@ -81,6 +83,7 @@ namespace CanvasAppPackager.Args
         public string PackageZip { get; set; }
         public string UnpackPath { get; set; }
         public string LogPath { get; set; }
+        public bool OnlyExtract { get; set; }
         public string RenameCopiedControlOldPostfix { get; set; }
         public string RenameCopiedControlNewPostfix { get; set; }
 
