@@ -26,8 +26,8 @@ namespace CanvasAppPackager.Poco
         public bool IsCustomGroupControlTemplate { get; set; }
         public string CustomGroupControlTemplateName { get; set; }
         public string CustomControlDefinitionJson { get; set; }
-        public string DynamicControlDefinitionJson { get; set; }
         public bool IsComponentDefinition { get; set; }
+        public string DynamicControlDefinitionJson { get; set; }
         public List<CustomProperty> CustomProperties { get; set; }
         public Component ComponentDefinitionInfo { get; set; }
         public OverridableProperties OverridableProperties { get; set; }
