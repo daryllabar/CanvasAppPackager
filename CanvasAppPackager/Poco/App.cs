@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Linq;
+// ReSharper disable All
 
 namespace CanvasAppPackager.Poco
 {
@@ -64,7 +64,7 @@ namespace CanvasAppPackager.Poco
         public string InvariantScript { get; set; }
         public string NameMap { get; set; }
     }
-
+    
     public class ControlPropertyState
     {
         public string InvariantPropertyName { get; set; }
