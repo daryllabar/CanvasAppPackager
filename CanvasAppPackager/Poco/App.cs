@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 // ReSharper disable All
 
 namespace CanvasAppPackager.Poco
@@ -165,8 +164,7 @@ namespace CanvasAppPackager.Poco
     {
         public string Description { get; set; }
 
-        [JsonProperty("Allow customization")]
-        public bool AllowCustomizations { get; set; }
+        public bool AllowCustomization { get; set; }
     }
 
     public class TopParent : IControl
