@@ -29,6 +29,7 @@ namespace CanvasAppPackager.Poco
         public string CustomControlDefinitionJson { get; set; }
         public List<CustomProperty> CustomProperties { get; set; }
         public Component ComponentDefinitionInfo { get; set; }
+        public string TemplateDisplayName { get; set; }
         public OverridableProperties OverridableProperties { get; set; }
     }
 
