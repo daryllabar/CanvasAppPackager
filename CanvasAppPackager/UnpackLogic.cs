@@ -183,6 +183,7 @@ namespace CanvasAppPackager
             var newJson = screen.Serialize(isJsonFormatted
                                                ? Formatting.Indented
                                                : Formatting.None);
+            newJson = FixSerializationExceptions(newJson);
             if (json != newJson)
             {
                 var jsonFile = Path.Combine(Path.GetDirectoryName(file), Path.GetFileName(file)) + ".original";
@@ -224,6 +225,27 @@ namespace CanvasAppPackager
 
                      
             }
+        }
+
+        private static string FixSerializationExceptions(string newJson)
+        {
+            if (newJson.Contains("\"DynamicControlDefinitionJson\": "))
+            {
+                // Contains PCF Control fix issue with TemplateDisplayName being populated with a null value
+                var lines = new List<string>(newJson.Split(Environment.NewLine));
+                for (var i = 0; i < lines.Count; i++)
+                {
+                    if (lines[i].Length > 0 
+                        && lines[i].TrimStart().StartsWith("\"DynamicControlDefinitionJson\": "))
+                    {
+                        lines.Insert(++i, new string(' ', lines[i].IndexOf('"')) + "\"TemplateDisplayName\": null,");
+                    }
+                }
+
+                newJson = string.Join(Environment.NewLine, lines);
+            }
+
+            return newJson;
         }
 
         private static void ParseControl(CanvasAppScreen screen, IControl control, string directory, AutoValueExtractor autoValueExtractor)
