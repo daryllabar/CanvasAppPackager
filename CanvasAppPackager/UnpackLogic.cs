@@ -13,6 +13,8 @@ namespace CanvasAppPackager
         public const string CodeFileExt = ".js";
         public const string DataFileExt = ".json";
         public const string EndOfRuleCode = "} // End of ";
+        public static readonly Version MinimumDocVersion = new Version("1.280");
+        private const string DocVersionStartText = "\"DocVersion\": \"";
 
         public struct Paths
         {
@@ -23,6 +25,7 @@ namespace CanvasAppPackager
             public const string Code = "Code";
             public const string Components = "Components";
             public const string Controls = "Controls";
+            public const string Header = "Header.json";
             public const string Icons = "Icons";
             public const string Metadata= "MetadataFiles";
             public const string MsPowerApps = "Microsoft.PowerApps";
@@ -152,6 +155,12 @@ namespace CanvasAppPackager
             var codeDirectory = Path.Combine(appDirectory, Paths.Code);
             var controlsDir = Path.Combine(appDirectory, Paths.Controls);
             var autoValueExtractor = new AutoValueExtractor();
+            var header = File.ReadAllText(Path.Combine(appDirectory, Paths.Header));
+            var indexOfDocVersion = header.IndexOf(DocVersionStartText, StringComparison.InvariantCultureIgnoreCase) + DocVersionStartText.Length;
+            var version    = new Version(header[indexOfDocVersion
+                                             ..
+                                             header.IndexOf("\"", indexOfDocVersion, StringComparison.InvariantCultureIgnoreCase)]);
+
             foreach (var file in Directory.GetFiles(controlsDir))
             {
                 Logger.Log("Extracting file " + file);
@@ -161,7 +170,7 @@ namespace CanvasAppPackager
                     json = RenameControls(json, options);
                 }
                 var screen = JsonConvert.DeserializeObject<CanvasAppScreen>(json);
-                VerifySerialization(screen, json, file);
+                VerifySerialization(screen, json, file, version);
                 var fileDirectory = Path.Combine(codeDirectory, screen.TopParent.Name);
                 ParseControl(screen, screen.TopParent, fileDirectory, autoValueExtractor);
             }
@@ -177,7 +186,7 @@ namespace CanvasAppPackager
             return app.Replace(options.RenameCopiedControlOldPostfix, options.RenameCopiedControlNewPostfix);
         }
 
-        private static void VerifySerialization(CanvasAppScreen screen, string json, string file)
+        private static void VerifySerialization(CanvasAppScreen screen, string json, string file, Version docVersion)
         {
             var isJsonFormatted = json.Length > 2 && json[1] == '\r' && json[2] == '\n';
             var newJson = screen.Serialize(isJsonFormatted
@@ -186,6 +195,10 @@ namespace CanvasAppPackager
             newJson = FixSerializationExceptions(newJson);
             if (json != newJson)
             {
+                if (docVersion < MinimumDocVersion)
+                {
+                    throw new Exception($"The version of the canvas app is too old!  App version {docVersion}.  Minimum Version {MinimumDocVersion}");
+                }
                 var jsonFile = Path.Combine(Path.GetDirectoryName(file), Path.GetFileName(file)) + ".original";
                 // ReSharper disable once StringLiteralTypo
                 var newJsonFile = Path.Combine(Path.GetDirectoryName(jsonFile), Path.GetFileNameWithoutExtension(jsonFile)) + ".reserialized";
