@@ -121,15 +121,17 @@ namespace CanvasAppPackager
 
             //Rename Component Files
             var componentsPath = Path.Combine(appDirectory, Paths.Components);
-            foreach (var file in Directory.GetFiles(componentsPath))
-            {
-                Logger.Log("Extracting file " + file);
-                json = File.ReadAllText(file);
-                var component = JsonConvert.DeserializeObject<CanvasAppScreen>(json);
-                toName = Path.Combine(componentsPath, component.TopParent.Name + Path.GetExtension(file));
-                Logger.Log($"Renaming component file '{file}' to '{toName}'.");
-                File.Delete(toName);
-                File.Move(file, toName);
+            if(Directory.Exists(componentsPath)){
+                foreach (var file in Directory.GetFiles(componentsPath))
+                {
+                    Logger.Log("Extracting file " + file);
+                    json = File.ReadAllText(file);
+                    var component = JsonConvert.DeserializeObject<CanvasAppScreen>(json);
+                    toName = Path.Combine(componentsPath, component.TopParent.Name + Path.GetExtension(file));
+                    Logger.Log($"Renaming component file '{file}' to '{toName}'.");
+                    File.Delete(toName);
+                    File.Move(file, toName);
+                }
             }
         }
 
