@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -8,14 +9,15 @@ namespace CanvasAppPackager
     {
         static void Main(string[] args)
         {
-            var pack = new string[]
+            var testUnpack = true;
+            var pack = new[]
             {
                 "/a", "pack", 
                 "/z", @"C:\Temp\PowerFlappy\PowerFlappyByDaryl.zip",
                 "/f", @"C:\Temp\PowerFlappy\Extract"
             };
-            
-            var unpack = new string[]
+
+            var unpack = new[]
             {
                 "/a", "unpack",
                 "/z", @"C:\Temp\PowerFlappy\PowerFlappy.zip",
@@ -23,6 +25,13 @@ namespace CanvasAppPackager
                 //,"/r", "Si_3|Wm"
             };
             var options = Args.Args.Parse(args);
+
+            if (Debugger.IsAttached)
+            {
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                options = Args.Args.Parse(testUnpack ? unpack: pack);
+            }
+
             if (!string.IsNullOrWhiteSpace(options.LogPath))
             {
                 Logger.Error("Log Path not implemented!");
