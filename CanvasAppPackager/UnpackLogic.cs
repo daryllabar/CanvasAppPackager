@@ -14,6 +14,7 @@ namespace CanvasAppPackager
         public const string DataFileExt = ".json";
         public const string EndOfRuleCode = "} // End of ";
         public static readonly Version MinimumDocVersion = new Version("1.280");
+        public const string UnformattedPrefix = "//// Unformatted: ";
         private const string DocVersionStartText = "\"DocVersion\": \"";
 
         public struct Paths
@@ -103,6 +104,25 @@ namespace CanvasAppPackager
                     Directory.CreateDirectory(Path.GetDirectoryName(destinationFile));
                 }
                 File.Move(file, destinationFile);
+
+                FormatJsonFile(destinationFile);
+            }
+        }
+
+        private static void FormatJsonFile(string destinationFile)
+        {
+            if (Path.GetExtension(destinationFile)?.ToLower() != ".json")
+            {
+                return;
+            }
+
+            var fileLines = File.ReadAllLines(destinationFile);
+            if (fileLines.Length == 1)
+            {
+                File.WriteAllText(destinationFile, UnformattedPrefix
+                                                   + fileLines[0]
+                                                   + Environment.NewLine
+                                                   + JsonConvert.SerializeObject(JsonConvert.DeserializeObject(fileLines[0]), Formatting.Indented));
             }
         }
 

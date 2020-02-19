@@ -222,8 +222,24 @@ namespace CanvasAppPackager
                     fileName = Path.Combine(Path.GetDirectoryName(destinationPath), map);
                 }
                 File.Copy(file, fileName, true);
+                RemoveJsonFormatting(fileName);
             }
         }
+
+        private static void RemoveJsonFormatting(string destinationFile)
+        {
+            if (Path.GetExtension(destinationFile)?.ToLower() != ".json")
+            {
+                return;
+            }
+
+            var fileLines = File.ReadAllLines(destinationFile);
+            if (fileLines.Length >= 1 && fileLines[0].StartsWith(UnpackLogic.UnformattedPrefix))
+            {
+                File.WriteAllText(destinationFile, fileLines[0].Substring(UnpackLogic.UnformattedPrefix.Length));
+            }
+        }
+
 
         private static void RestoreAutoNamedFiles(string appDirectory)
         {
