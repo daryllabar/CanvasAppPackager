@@ -71,7 +71,7 @@ namespace CanvasAppPackager
             foreach (var appSourcePath in Directory.GetDirectories(appsPath))
             {
                 var appInfo = AppInfo.Parse(File.ReadAllText(Path.Join(appSourcePath, Path.GetFileName(appSourcePath)) + ".json"));
-                var appOutputPath = Path.Combine(outputDirectory, Paths.Apps, appInfo.DisplayName);
+                var appOutputPath = Path.Combine(outputDirectory, Paths.Apps, string.IsNullOrWhiteSpace(options.NameOfApplication) ? appInfo.DisplayName: options.NameOfApplication);
                 Logger.Log($"Extracting App {appInfo.DisplayName} - {appInfo.Description}");
                 var msAppFilePath = Path.Combine(appsPath, appInfo.MsAppPath);
                 Unpack(msAppFilePath, appOutputPath, options);
