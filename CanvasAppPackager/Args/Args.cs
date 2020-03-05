@@ -61,12 +61,12 @@ namespace CanvasAppPackager.Args
                             }
                         }
                     },
-                    {"c|Clobber|clobber", "Optional. This argument is used only during an extraction. When /clobber is specified, files that have the read-only attribute set are overwritten or deleted. When not specified, files with the read-only attribute aren't overwritten or deleted.", v => Clobber = v != null }, 
+                    {"c|Clobber|clobber", "Optional. This argument is used only during an unpack action. Deletes all files in the output directory.", v => Clobber = v != null }, 
                     {"z=|ZipFile", "Required. The path and name of an application package .zip file. When extracting, the file must exist and will be read from, or must be 'Latest' to use the latest downloaded file. When packing, the file is replaced.", v => PackageZip = v?.Trim() },
                     {"f=|folder", "Required. The path to a folder. When extracting, this folder is created and populated with component files. When packing, this folder must already exist and contain previously extracted component files.", v => UnpackPath = v?.Trim()},
                     {"l:|log", "Optional. A path and name to a log file. If the file already exists, new logging information is appended to the file.", v => LogPath = v?.Trim()},
-                    {"o:|OnlyExtract", "Optional.  Only unpacks the MsApp file, does not parse it.", v => OnlyExtract = bool.Parse(v.Trim()) },
                     {"n=|NameOfApplication", "Optional.  The name of the application to extract the application as.  Helpful to remove postfixes from applications i.e. \"-Dev\" or \"-Hotfix\"", v => NameOfApplication = v.Trim() },
+                    {"o:|OnlyExtract", "Optional.  Only unpacks the MsApp file, does not parse it.", v => OnlyExtract = bool.Parse(v.Trim()) },
                     {"r=|RenameCopiedScreenControls", "Optional. Only valid on Unpack.  Should contain a piped delimited string of {OldScreenPostfixValue}|{NewScreenPostfixValue}.  So EditScreen|DisplayScreen to rename a control MyLabelEditScreen_1 to MyLabelDisplayScreen", v =>
                     {
                         RenameCopiedControlOldPostfix = v?.Split('|').FirstOrDefault()?.Trim();
