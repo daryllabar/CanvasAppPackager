@@ -88,6 +88,7 @@ namespace CanvasAppPackager.Poco
         public TypeTemplate Template { get; set; }
         public List<ControlType> Type { get; set; }
         public List<string> ProjectionInfoDataSources { get; set; }
+        public ControlThisItemType Attachment { get; set; }
     }
 
     public class ControlThisItemType
