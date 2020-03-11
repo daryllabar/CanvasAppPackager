@@ -26,7 +26,7 @@ namespace CanvasAppPackager
             };
             var options = Args.Args.Parse(args);
 
-            if (Debugger.IsAttached)
+            if (Debugger.IsAttached && args.Length == 0)
             {
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                 options = Args.Args.Parse(testUnpack ? unpack: pack);
