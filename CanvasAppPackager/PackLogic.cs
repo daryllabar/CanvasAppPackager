@@ -13,6 +13,23 @@ namespace CanvasAppPackager
     {
         public static void Pack(Args.Args options)
         {
+            if (File.Exists(Path.Combine(options.UnpackPath, UnpackLogic.Paths.ManifestFileName)))
+            {
+                PackZip(options);
+            }
+            else if (File.Exists(Path.Combine(options.UnpackPath, UnpackLogic.Paths.Header)))
+            {
+                PackApp(options.UnpackPath, options.PackageZip);
+            }
+            else
+            {
+                throw new Exception("There is no manifest.json or Header.json found in the extract folder");
+            }
+
+        }
+
+        private static void PackZip(Args.Args options)
+        {
             var zipPath = GetTemporaryDirectory();
             try
             {
@@ -21,11 +38,13 @@ namespace CanvasAppPackager
                 {
                     PackApp(appPath, zipPath);
                 }
+
                 Logger.Log("Creating zip file " + options.PackageZip);
                 if (File.Exists(options.PackageZip))
                 {
                     File.Delete(options.PackageZip);
                 }
+
                 ZipFile.CreateFromDirectory(zipPath, options.PackageZip);
             }
             finally
@@ -51,16 +70,24 @@ namespace CanvasAppPackager
                 
                 Logger.Log("Parsing AppInfo");
                 var sourcePath = Path.Combine(appPath, UnpackLogic.Paths.Metadata);
-                var metadataFiles = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories); 
-                var appInfo = AppInfo.Parse(File.ReadAllText(metadataFiles.Single(f => Path.GetExtension(f) == ".json")));
-                var destinationPath = Path.Combine(mainAppPath, UnpackLogic.Paths.MsPowerApps, "apps", appInfo.AppId);
-                MoveMetadataFilesFromExtract(appInfo, sourcePath, destinationPath, metadataFiles);
+                string msAppZipPath;
+
+                if (Directory.Exists(sourcePath))
+                {
+                    var metadataFiles = Directory.GetFiles(sourcePath, "*", SearchOption.AllDirectories); 
+                    var appInfo = AppInfo.Parse(File.ReadAllText(metadataFiles.Single(f => Path.GetExtension(f) == ".json")));
+                    var destinationPath = Path.Combine(mainAppPath, UnpackLogic.Paths.MsPowerApps, "apps", appInfo.AppId);
+                    MoveMetadataFilesFromExtract(appInfo, sourcePath, destinationPath, metadataFiles);
+                    msAppZipPath = Path.Combine(destinationPath, Path.GetFileName(appInfo.MsAppPath));
+                }
+                else
+                {
+                    msAppZipPath = mainAppPath;
+                }
 
                 Logger.Log("Parsing Resource\\PublisherInfo");
                 RestoreAutoNamedFiles(zipPath);
 
-                var msAppZipPath = Path.Combine(destinationPath, Path.GetFileName(appInfo.MsAppPath));
-                
                 Logger.Log($"Packing file {msAppZipPath}");
                 MsAppHelper.CreateFromDirectory(zipPath, msAppZipPath);
             }
@@ -255,12 +282,19 @@ namespace CanvasAppPackager
 
             // Rename Component Files
             var componentsPath = Path.Combine(appDirectory, UnpackLogic.Paths.Components);
+            if (Directory.Exists(componentsPath))
+            {
+                RestoreRenamedComponetFiles(componentsPath);
+            }
+        }
+
+        private static void RestoreRenamedComponetFiles(string componentsPath)
+        {
             foreach (var file in Directory.GetFiles(componentsPath))
             {
                 Logger.Log("Extracting file " + file);
-                json = File.ReadAllText(file);
-                var component = JsonConvert.DeserializeObject<CanvasAppScreen>(json);
-                toName = Path.Combine(componentsPath, component.TopParent.ControlUniqueId + Path.GetExtension(file));
+                var component = JsonConvert.DeserializeObject<CanvasAppScreen>(File.ReadAllText(file));
+                var toName = Path.Combine(componentsPath, component.TopParent.ControlUniqueId + Path.GetExtension(file));
                 Logger.Log($"Renaming component file '{file}' to '{toName}'.");
                 File.Delete(toName);
                 File.Move(file, toName);

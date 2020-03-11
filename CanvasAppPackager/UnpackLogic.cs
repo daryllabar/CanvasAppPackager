@@ -28,6 +28,7 @@ namespace CanvasAppPackager
             public const string Controls = "Controls";
             public const string Header = "Header.json";
             public const string Icons = "Icons";
+            public const string ManifestFileName = "manifest.json";
             public const string Metadata= "MetadataFiles";
             public const string MsPowerApps = "Microsoft.PowerApps";
             public const string Resources = "Resources";
