@@ -275,10 +275,15 @@ namespace CanvasAppPackager
             Logger.Log("Extracting file " + publishInfo);
             var json = File.ReadAllText(publishInfo);
             var info = JsonConvert.DeserializeObject<PublishInfo>(json);
+
+            // Copy Logo. Optional file. 
             var fromName = Path.Combine(resourceFilesPath, UnpackLogic.Paths.LogoImage + Path.GetExtension(info.LogoFileName));
-            var toName = Path.Combine(appDirectory, UnpackLogic.Paths.Resources, info.LogoFileName);
-            Logger.Log($"Restoring auto named file '{fromName}' to '{toName}'.");
-            File.Move(fromName, toName);
+            if (File.Exists(fromName))
+            {
+                var toName = Path.Combine(appDirectory, UnpackLogic.Paths.Resources, info.LogoFileName);
+                Logger.Log($"Restoring auto named file '{fromName}' to '{toName}'.");
+                File.Move(fromName, toName);
+            }
 
             // Rename Component Files
             var componentsPath = Path.Combine(appDirectory, UnpackLogic.Paths.Components);

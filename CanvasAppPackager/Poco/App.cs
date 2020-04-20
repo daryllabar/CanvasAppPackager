@@ -3,6 +3,12 @@
 
 namespace CanvasAppPackager.Poco
 {
+    class Header
+    {
+        public string DocVersion { get; set; }
+        // There are more properties ...
+    }
+
     public class OverridableProperties
     {
     }
@@ -64,7 +70,7 @@ namespace CanvasAppPackager.Poco
         public string Category { get; set; }
         public string InvariantScript { get; set; }
         public string RuleProviderType { get; set; }
-        public string NameMap { get; set; }
+        public string NameMap { get; set; }        
     }
 
     /// <summary>
