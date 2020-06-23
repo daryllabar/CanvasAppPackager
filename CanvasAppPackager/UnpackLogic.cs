@@ -15,7 +15,7 @@ namespace CanvasAppPackager
         public const string EndOfRuleCode = "} // End of ";
         public static readonly Version MinimumDocVersion = new Version("1.280");
         public const string UnformattedPrefix = "//// Unformatted: ";
-        private const string DocVersionStartText = "\"DocVersion\": \"";
+        private const string DocVersionStartText = "\"DocVersion\"";
 
         public struct Paths
         {
@@ -180,6 +180,7 @@ namespace CanvasAppPackager
             var autoValueExtractor = new AutoValueExtractor();
             var header = File.ReadAllText(Path.Combine(appDirectory, Paths.Header));
             var indexOfDocVersion = header.IndexOf(DocVersionStartText, StringComparison.InvariantCultureIgnoreCase) + DocVersionStartText.Length;
+            indexOfDocVersion = header.IndexOf('"', indexOfDocVersion) + 1;
             var version    = new Version(header[indexOfDocVersion
                                              ..
                                              header.IndexOf("\"", indexOfDocVersion, StringComparison.InvariantCultureIgnoreCase)]);
@@ -225,42 +226,65 @@ namespace CanvasAppPackager
                 var jsonFile = Path.Combine(Path.GetDirectoryName(file), Path.GetFileName(file)) + ".original";
                 // ReSharper disable once StringLiteralTypo
                 var newJsonFile = Path.Combine(Path.GetDirectoryName(jsonFile), Path.GetFileNameWithoutExtension(jsonFile)) + ".reserialized";
-                File.WriteAllText(jsonFile, json);
-                File.WriteAllText(newJsonFile, newJson);
-                var shortest = json.Length > newJson.Length
-                    ? newJson
-                    : json;
-                var errorScope = Environment.NewLine + Environment.NewLine;
-                var lineNumber = 0;
-                var linePosition = 0;
+                WriteJsonFileWithFormattedCopy(jsonFile, json);
+                WriteJsonFileWithFormattedCopy(newJsonFile, newJson);
+                var errorMsg = CreateDiffErrorMsg(json, file, newJson, jsonFile, newJsonFile, false);
+                jsonFile += ".json";
+                newJsonFile += ".json";
+                errorMsg += CreateDiffErrorMsg(File.ReadAllText(jsonFile), file, File.ReadAllText(newJsonFile), jsonFile, newJsonFile, true);
+                throw new
+                    Exception("Unable to re-serialize json to match source!  " + errorMsg);
 
-                var firstDifferentChar = shortest.Length;
-                for (var i = 0; i < shortest.Length; i++)
+
+
+            }
+        }
+
+        private static string CreateDiffErrorMsg(string json, string file, string newJson, string jsonFile, string newJsonFile, bool formatted)
+        {
+            var shortest = json.Length > newJson.Length
+                ? newJson
+                : json;
+            var errorScope = Environment.NewLine + Environment.NewLine;
+            var lineNumber = 0;
+            var linePosition = 0;
+
+            var firstDifferentChar = shortest.Length;
+            for (var i = 0; i < shortest.Length; i++)
+            {
+                if (json[i] == '\n')
                 {
-                    if(json[i] == '\n')
-                    {
-                        lineNumber++;
-                        linePosition = 0;
-                    }
-                    else
-                    {
-                        linePosition++;
-                    }
-
-                    if (json[i] == newJson[i])
-                    {
-                        continue;
-                    }
-
-                    firstDifferentChar = i;
-                    break;
+                    lineNumber++;
+                    linePosition = 0;
+                }
+                else
+                {
+                    linePosition++;
                 }
 
-                throw new
-                    Exception($"Unable to re-serialize json to match source!  Character at position: {firstDifferentChar} on line: {lineNumber} at {linePosition} is not correct.  To prevent potential app defects, extracting file {file} has stopped.{Environment.NewLine}See '{jsonFile}' for extracted version vs output version '{newJsonFile}'.{(string.IsNullOrWhiteSpace(errorScope) ? string.Empty : errorScope)}");
+                if (json[i] == newJson[i])
+                {
+                    continue;
+                }
 
-                     
+                if (lineNumber == 0 && formatted)
+                {
+                    // Skip the Unformatted Line
+                    continue;
+                }
+                firstDifferentChar = i;
+                break;
             }
+
+            var formatText = formatted ? " formatted " : " ";
+            return $"Character at position: {firstDifferentChar} on line: {lineNumber} at {linePosition} is not correct.  To prevent potential app defects, extracting file {file} has stopped.{Environment.NewLine}See '{jsonFile}' for extracted{formatText}version vs output{formatText}version '{newJsonFile}'.{(string.IsNullOrWhiteSpace(errorScope) ? string.Empty : errorScope)}";
+        }
+
+        private static void WriteJsonFileWithFormattedCopy(string jsonFile, string json)
+        {
+            File.WriteAllText(jsonFile, json);
+            File.Copy(jsonFile, jsonFile + ".json", true);
+            FormatJsonFile(jsonFile + ".json");
         }
 
         private static string FixSerializationExceptions(string newJson)

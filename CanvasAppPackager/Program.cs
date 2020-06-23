@@ -21,7 +21,8 @@ namespace CanvasAppPackager
             {
                 "/a", "unpack",
                 "/z", @"C:\Temp\PowerFlappy\PowerFlappy.zip",
-                "/f", @"C:\Temp\PowerFlappy\Extract"
+                "/f", @"C:\Temp\PowerFlappy\Extract",
+                "/n", @"PowerFlappy"
                 //,"/r", "Si_3|Wm"
             };
             var options = Args.Args.Parse(args);

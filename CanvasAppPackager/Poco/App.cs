@@ -30,6 +30,7 @@ namespace CanvasAppPackager.Poco
         public List<CustomProperty> CustomProperties { get; set; }
         public Component ComponentDefinitionInfo { get; set; }
         public string TemplateDisplayName { get; set; }
+        public string SourceLibraryId { get; set; }
         public OverridableProperties OverridableProperties { get; set; }
     }
 
@@ -62,6 +63,7 @@ namespace CanvasAppPackager.Poco
         public string Property { get; set; }
         public string Category { get; set; }
         public string InvariantScript { get; set; }
+        public string RuleProviderType { get; set; }
         public string NameMap { get; set; }
     }
 
