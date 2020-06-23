@@ -134,11 +134,15 @@ namespace CanvasAppPackager
             Logger.Log("Extracting file " + publishInfo);
             var json = File.ReadAllText(publishInfo);
             var info = JsonConvert.DeserializeObject<PublishInfo>(json);
-            var fromName = Path.Combine(resourceFilesPath, info.LogoFileName);
-            var toName = Path.Combine(resourceFilesPath, Paths.LogoImage + Path.GetExtension(info.LogoFileName));
-            Logger.Log($"Renaming auto named file '{fromName}' to '{toName}'.");
-            File.Delete(toName);
-            File.Move(fromName, toName);
+
+            if (!string.IsNullOrEmpty(info.LogoFileName)) // Logo file is optional 
+            {
+                var fromName = Path.Combine(resourceFilesPath, info.LogoFileName);
+                var toName = Path.Combine(resourceFilesPath, Paths.LogoImage + Path.GetExtension(info.LogoFileName));
+                Logger.Log($"Renaming auto named file '{fromName}' to '{toName}'.");
+                File.Delete(toName);
+                File.Move(fromName, toName);
+            }
 
             //Rename Component Files
             var componentsPath = Path.Combine(appDirectory, Paths.Components);
@@ -148,7 +152,7 @@ namespace CanvasAppPackager
                     Logger.Log("Extracting file " + file);
                     json = File.ReadAllText(file);
                     var component = JsonConvert.DeserializeObject<CanvasAppScreen>(json);
-                    toName = Path.Combine(componentsPath, component.TopParent.Name + Path.GetExtension(file));
+                    var toName = Path.Combine(componentsPath, component.TopParent.Name + Path.GetExtension(file));
                     Logger.Log($"Renaming component file '{file}' to '{toName}'.");
                     File.Delete(toName);
                     File.Move(file, toName);
