@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using CanvasAppPackager.Poco;
+using CanvasAppPackager.Args;
 
 namespace CanvasAppPackager
 {
@@ -23,6 +24,7 @@ namespace CanvasAppPackager
             public const string AutoValues = "AutoValues";
             public const string BackgroundImage = "BackgroundImage.png";
             public const string Code = "Code";
+            public const string ComponentCode = "ComponentCode";
             public const string Components = "Components";
             public const string Controls = "Controls";
             public const string Header = "Header.json";
@@ -142,21 +144,6 @@ namespace CanvasAppPackager
                 File.Delete(toName);
                 File.Move(fromName, toName);
             }
-
-            //Rename Component Files
-            var componentsPath = Path.Combine(appDirectory, Paths.Components);
-            if (Directory.Exists(componentsPath)) {
-                foreach (var file in Directory.GetFiles(componentsPath))
-                {
-                    Logger.Log("Extracting file " + file);
-                    json = File.ReadAllText(file);
-                    var component = JsonConvert.DeserializeObject<CanvasAppScreen>(json);
-                    var toName = Path.Combine(componentsPath, component.TopParent.Name + Path.GetExtension(file));
-                    Logger.Log($"Renaming component file '{file}' to '{toName}'.");
-                    File.Delete(toName);
-                    File.Move(file, toName);
-                }
-            }
         }
 
         private static Dictionary<string, string> GetMetadataFileMappings(AppInfo appInfo)
@@ -179,14 +166,25 @@ namespace CanvasAppPackager
         private static void ExtractCanvasApp(string appDirectory, Args.Args options)
         {
             var codeDirectory = Path.Combine(appDirectory, Paths.Code);
+            var componentCodeDirectory = Path.Combine(appDirectory, Paths.ComponentCode);
             var controlsDir = Path.Combine(appDirectory, Paths.Controls);
-            var autoValueExtractor = new AutoValueExtractor();
+            var componentsDir = Path.Combine(appDirectory, Paths.Components);
             var header = File.ReadAllText(Path.Combine(appDirectory, Paths.Header));
 
 
             // It's important to use proper JSON deserialization since the whitepsace is unpredictable. 
             var headerObj = JsonConvert.DeserializeObject<Header>(header);                        
             var version    = new Version(headerObj.DocVersion);
+
+            ExtraCodeful(controlsDir, codeDirectory, version, options);
+            ExtraCodeful(componentsDir, componentCodeDirectory, version, options);
+
+            RenameAutoNamedFiles(appDirectory);
+        }
+
+        private static void ExtraCodeful(string controlsDir, string codeDirectory, Version version, Args.Args options)
+        {
+            var autoValueExtractor = new AutoValueExtractor();
 
             foreach (var file in Directory.GetFiles(controlsDir))
             {
@@ -203,9 +201,7 @@ namespace CanvasAppPackager
             }
             File.WriteAllText(Path.Combine(codeDirectory, Paths.AutoValues) + DataFileExt, autoValueExtractor.Serialize());
             Directory.Delete(controlsDir, true);
-
-            RenameAutoNamedFiles(appDirectory);
-        }
+         }
 
         private static string RenameControls(string app, Args.Args options)
         {

@@ -59,15 +59,15 @@ namespace CanvasAppPackager
             var zipPath = GetTemporaryDirectory();
             try
             {
-                Logger.Log("Parsing Auto Values");
-                var extractor = AutoValueExtractor.Parse(Path.Combine(appPath, UnpackLogic.Paths.Code, UnpackLogic.Paths.AutoValues) + UnpackLogic.DataFileExt);
-
                 Logger.Log("Copying app files for zip creation.");
-                CopyFilesToZipFolder(appPath, zipPath, "MsApp", UnpackLogic.Paths.Code, UnpackLogic.Paths.Metadata);
+                CopyFilesToZipFolder(appPath, zipPath, "MsApp", UnpackLogic.Paths.Code, UnpackLogic.Paths.ComponentCode, UnpackLogic.Paths.Metadata);
                 
                 Logger.Log("Packaging Code files");
-                PackScreens(appPath, zipPath, extractor);
-                
+                PackScreens(appPath, zipPath, UnpackLogic.Paths.Code, UnpackLogic.Paths.Controls);
+
+                Logger.Log("Packaging Component Code files");
+                PackScreens(appPath, zipPath, UnpackLogic.Paths.ComponentCode, UnpackLogic.Paths.Components);
+
                 Logger.Log("Parsing AppInfo");
                 var sourcePath = Path.Combine(appPath, UnpackLogic.Paths.Metadata);
                 string msAppZipPath;
@@ -97,12 +97,20 @@ namespace CanvasAppPackager
             }
         }
 
-        private static void PackScreens(string appPath, string zipPath, AutoValueExtractor extractor)
+        private static void PackScreens(string appPath, string zipPath, string pathCode, string pathControls)
         {
-            foreach (var codeDirectory in Directory.GetDirectories(Path.Combine(appPath, UnpackLogic.Paths.Code)))
+            if (!Directory.Exists(Path.Combine(appPath, pathCode)))
+            {
+                return;
+            }
+
+            Logger.Log("Parsing Auto Values");
+            var extractor = AutoValueExtractor.Parse(Path.Combine(appPath, pathCode, UnpackLogic.Paths.AutoValues) + UnpackLogic.DataFileExt);
+
+            foreach (var codeDirectory in Directory.GetDirectories(Path.Combine(appPath, pathCode)))
             {
                 var screen = PackScreen(codeDirectory, extractor);
-                var dir = Path.Combine(zipPath, UnpackLogic.Paths.Controls);
+                var dir = Path.Combine(zipPath, pathControls);
                 if (!Directory.Exists(dir))
                 {
                     Directory.CreateDirectory(dir);
@@ -285,21 +293,28 @@ namespace CanvasAppPackager
                 File.Move(fromName, toName);
             }
 
-            // Rename Component Files
+            // There were 2 formats for unpacking components. 
+            //  Newer format: treated just like controls. There is a ComponentCode directory. Packs with controls.
+            //  Older format: it was just a rename. There is just a Components directory. Pack here. 
             var componentsPath = Path.Combine(appDirectory, UnpackLogic.Paths.Components);
             if (Directory.Exists(componentsPath))
             {
-                RestoreRenamedComponetFiles(componentsPath);
-            }
+                RestoreRenamedComponentFiles(componentsPath);
+            } 
         }
 
-        private static void RestoreRenamedComponetFiles(string componentsPath)
+        private static void RestoreRenamedComponentFiles(string componentsPath)
         {
             foreach (var file in Directory.GetFiles(componentsPath))
             {
                 Logger.Log("Extracting file " + file);
                 var component = JsonConvert.DeserializeObject<CanvasAppScreen>(File.ReadAllText(file));
                 var toName = Path.Combine(componentsPath, component.TopParent.ControlUniqueId + Path.GetExtension(file));
+                if (File.Exists(toName))
+                {
+                    continue; // File was already created via the code extraction path. 
+                }
+
                 Logger.Log($"Renaming component file '{file}' to '{toName}'.");
                 File.Delete(toName);
                 File.Move(file, toName);
