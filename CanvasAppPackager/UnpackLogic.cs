@@ -184,6 +184,10 @@ namespace CanvasAppPackager
 
         private static void ExtraCodeful(string controlsDir, string codeDirectory, Version version, Args.Args options)
         {
+            if (!Directory.Exists(controlsDir))
+            {
+                return;
+            }
             var autoValueExtractor = new AutoValueExtractor();
 
             foreach (var file in Directory.GetFiles(controlsDir))
