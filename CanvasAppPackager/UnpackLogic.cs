@@ -5,17 +5,17 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using CanvasAppPackager.Poco;
+using CanvasAppPackager.Args;
 
 namespace CanvasAppPackager
 {
     class UnpackLogic
-    {   
+    {
         public const string CodeFileExt = ".js";
         public const string DataFileExt = ".json";
         public const string EndOfRuleCode = "} // End of ";
         public static readonly Version MinimumDocVersion = new Version("1.280");
         public const string UnformattedPrefix = "//// Unformatted: ";
-        private const string DocVersionStartText = "\"DocVersion\"";
 
         public struct Paths
         {
@@ -24,12 +24,13 @@ namespace CanvasAppPackager
             public const string AutoValues = "AutoValues";
             public const string BackgroundImage = "BackgroundImage.png";
             public const string Code = "Code";
+            public const string ComponentCode = "ComponentCode";
             public const string Components = "Components";
             public const string Controls = "Controls";
             public const string Header = "Header.json";
             public const string Icons = "Icons";
             public const string ManifestFileName = "manifest.json";
-            public const string Metadata= "MetadataFiles";
+            public const string Metadata = "MetadataFiles";
             public const string MsPowerApps = "Microsoft.PowerApps";
             public const string Resources = "Resources";
             public const string ResourcePublishFileName = "PublishInfo.json";
@@ -44,7 +45,7 @@ namespace CanvasAppPackager
                 Directory.Delete(outputDirectory, true);
             }
 
-            Logger.Log("Extracting files from " + file + " to " + outputDirectory );
+            Logger.Log("Extracting files from " + file + " to " + outputDirectory);
             if (Path.GetExtension(file).ToLower() == ".zip")
             {
                 ZipFile.ExtractToDirectory(file, outputDirectory, true);
@@ -72,7 +73,7 @@ namespace CanvasAppPackager
             foreach (var appSourcePath in Directory.GetDirectories(appsPath))
             {
                 var appInfo = AppInfo.Parse(File.ReadAllText(Path.Join(appSourcePath, Path.GetFileName(appSourcePath)) + ".json"));
-                var appOutputPath = Path.Combine(outputDirectory, Paths.Apps, string.IsNullOrWhiteSpace(options.NameOfApplication) ? appInfo.DisplayName: options.NameOfApplication);
+                var appOutputPath = Path.Combine(outputDirectory, Paths.Apps, string.IsNullOrWhiteSpace(options.NameOfApplication) ? appInfo.DisplayName : options.NameOfApplication);
                 Logger.Log($"Extracting App {appInfo.DisplayName} - {appInfo.Description}");
                 var msAppFilePath = Path.Combine(appsPath, appInfo.MsAppPath);
                 Unpack(msAppFilePath, appOutputPath, options);
@@ -143,26 +144,11 @@ namespace CanvasAppPackager
                 File.Delete(toName);
                 File.Move(fromName, toName);
             }
-
-            //Rename Component Files
-            var componentsPath = Path.Combine(appDirectory, Paths.Components);
-            if(Directory.Exists(componentsPath)){
-                foreach (var file in Directory.GetFiles(componentsPath))
-                {
-                    Logger.Log("Extracting file " + file);
-                    json = File.ReadAllText(file);
-                    var component = JsonConvert.DeserializeObject<CanvasAppScreen>(json);
-                    var toName = Path.Combine(componentsPath, component.TopParent.Name + Path.GetExtension(file));
-                    Logger.Log($"Renaming component file '{file}' to '{toName}'.");
-                    File.Delete(toName);
-                    File.Move(file, toName);
-                }
-            }
         }
 
         private static Dictionary<string, string> GetMetadataFileMappings(AppInfo appInfo)
         {
-            var fileMapping = new Dictionary<string, string> {{appInfo.BackgroundImage, Paths.BackgroundImage}};
+            var fileMapping = new Dictionary<string, string> { { appInfo.BackgroundImage, Paths.BackgroundImage } };
             foreach (var icon in appInfo.Icons)
             {
                 var key = icon.Key;
@@ -180,14 +166,29 @@ namespace CanvasAppPackager
         private static void ExtractCanvasApp(string appDirectory, Args.Args options)
         {
             var codeDirectory = Path.Combine(appDirectory, Paths.Code);
+            var componentCodeDirectory = Path.Combine(appDirectory, Paths.ComponentCode);
             var controlsDir = Path.Combine(appDirectory, Paths.Controls);
-            var autoValueExtractor = new AutoValueExtractor();
+            var componentsDir = Path.Combine(appDirectory, Paths.Components);
             var header = File.ReadAllText(Path.Combine(appDirectory, Paths.Header));
-            var indexOfDocVersion = header.IndexOf(DocVersionStartText, StringComparison.InvariantCultureIgnoreCase) + DocVersionStartText.Length;
-            indexOfDocVersion = header.IndexOf('"', indexOfDocVersion) + 1;
-            var version    = new Version(header[indexOfDocVersion
-                                             ..
-                                             header.IndexOf("\"", indexOfDocVersion, StringComparison.InvariantCultureIgnoreCase)]);
+
+
+            // It's important to use proper JSON deserialization since the whitepsace is unpredictable. 
+            var headerObj = JsonConvert.DeserializeObject<Header>(header);                        
+            var version    = new Version(headerObj.DocVersion);
+
+            ExtraCodeful(controlsDir, codeDirectory, version, options);
+            ExtraCodeful(componentsDir, componentCodeDirectory, version, options);
+
+            RenameAutoNamedFiles(appDirectory);
+        }
+
+        private static void ExtraCodeful(string controlsDir, string codeDirectory, Version version, Args.Args options)
+        {
+            if (!Directory.Exists(controlsDir))
+            {
+                return;
+            }
+            var autoValueExtractor = new AutoValueExtractor();
 
             foreach (var file in Directory.GetFiles(controlsDir))
             {
@@ -204,9 +205,7 @@ namespace CanvasAppPackager
             }
             File.WriteAllText(Path.Combine(codeDirectory, Paths.AutoValues) + DataFileExt, autoValueExtractor.Serialize());
             Directory.Delete(controlsDir, true);
-
-            RenameAutoNamedFiles(appDirectory);
-        }
+         }
 
         private static string RenameControls(string app, Args.Args options)
         {
