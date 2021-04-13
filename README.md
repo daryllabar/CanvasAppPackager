@@ -1,3 +1,6 @@
+# DEPRECATED/UNSUPOPRTED
+Microsoft has developed their own tool that performs this action.  As such, I will not be making any further changes to this project.  Please change over to using theres: https://github.com/microsoft/PowerApps-Language-Tooling 
+
 # CanvasAppPackager
 Tool used to Extract Canvas Apps, to be pushed into source control, and repackage it to be pushed to the cloud.  Basically a Power Apps version of the CRM SolutionPackager.  
 
